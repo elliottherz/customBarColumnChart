@@ -9,7 +9,7 @@ IF YOU FIND ANY ISSUES, PLEASE EMAIL: Elliott.Herz@sisense.com
 
 
 # Example of usage:
-1) Put plugin in /plugins folder
+1) Put plugin in /plugins folder and make sure the folder is called: customBarColumnChart
 2) Create column/bar chart and hit apply
 3) Edit widget and on the Design Panel activate "CUSTOMIZE CHART" option
 4) Play around with a few options
