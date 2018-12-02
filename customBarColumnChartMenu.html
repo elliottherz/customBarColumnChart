@@ -1,0 +1,65 @@
+<div class="settings-pane-host-menu"
+     data-ng-controller="plugin-customBarColumnChart.controllers.customBarColumnChartController"  >
+    <div class="pane-row">
+        <div class="checker-pane-holder" data-ng-class="{disabled: !customMenuEnabled }" >
+            <div class="checker-pane-title">CUSTOMIZE CHART</div>
+
+            <data-chk-onoff class="checker-pane-enabled"
+                            data-checked="customMenuEnabled"
+                            data-checked-changed="enabledChanged(customMenuEnabled)">
+            </data-chk-onoff>
+        </div>
+    </div>
+
+	<div class="add-totals-row" data-ng-show="customMenuEnabled">
+		<div class="checker-pane-holder">
+			<div class="checker-pane-title">SHOW TOTALS</div>
+		</div>
+		<div class="type-holder">
+			<div data-ng-repeat="addTotal in ['No', 'Yes']"
+				 data-ng-class="{selected: addTotal == addTotalOption}"
+				 data-ng-click="changeAddTotal(addTotal)"
+				 class="radio-option-item">
+				<div class="custom-radio-btn"
+					 data-ng-class="{selected: addTotal == addTotalOption}"></div>
+				<div class="radio-option-separator"></div>
+				<div class="radio-option-caption">{{addTotal}}</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="sort-categories-row" data-ng-show="customMenuEnabled">
+		<div class="checker-pane-holder">
+			<div class="checker-pane-title">SORT CATEGORIES</div>
+		</div>
+		<div class="type-holder">
+			<div data-ng-repeat="sortCategories in ['None', 'Asc by Total', 'Desc by Total']"
+				 data-ng-class="{selected: sortCategories == sortCategoriesOption}"
+				 data-ng-click="changeSortCategories(sortCategories)"
+				 class="radio-option-item">
+				<div class="custom-radio-btn"
+					 data-ng-class="{selected: sortCategories == sortCategoriesOption}"></div>
+				<div class="radio-option-separator"></div>
+				<div class="radio-option-caption">{{sortCategories}}</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="sort-breakby-row" data-ng-show="customMenuEnabled">
+		<div class="checker-pane-holder">
+			<div class="checker-pane-title">SORT BREAK BY</div>
+		</div>
+		<div class="type-holder">
+			<div data-ng-repeat="sortBreakBy in ['None', 'Reverse', 'Asc by Total', 'Desc by Total']"
+				 data-ng-class="{selected: sortBreakBy == sortBreakByOption}"
+				 data-ng-click="changeSortBreakBy(sortBreakBy)"
+				 class="radio-option-item">
+				<div class="custom-radio-btn"
+					 data-ng-class="{selected: sortBreakBy == sortBreakByOption}"></div>
+				<div class="radio-option-separator"></div>
+				<div class="radio-option-caption">{{sortBreakBy}}</div>
+			</div>
+		</div>
+	</div>
+	
+</div>

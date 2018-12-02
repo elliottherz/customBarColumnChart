@@ -1,0 +1,24 @@
+.settings-pane-host-menu {
+    display: inline-block;
+    width: 100%;
+}
+
+.settings-pane-host-menu .pane-row {
+    margin: 10px 8px 0px 8px;
+    min-height: 24px;
+}
+
+.add-totals-row {
+	height: 85px;
+    margin: 5px 8px 0px 8px;
+}
+
+.sort-categories-row {
+	height: 115px;
+    margin: 1px 8px 0px 8px;
+}
+
+.sort-breakby-row {
+	height: 115px;
+    margin: 1px 8px 0px 8px;
+}
