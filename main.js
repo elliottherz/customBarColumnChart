@@ -25,6 +25,12 @@ prism.run([
 			else if(sortCategoriesOption === "Desc by Total") { 
 				executeSortCategoriesOption(w,el,'DESC'); 
 			}
+			else if(sortCategoriesOption === "Reverse") {
+				executeSortCategoryReverseOption(w,el);
+			}
+			else if(sortCategoriesOption === "Custom") {
+				executeSortCategoryCustomOption(w,el);
+			}
 			
 			if(sortBreakByOption === "Asc by Total") { 
 				executeSortBreakByTotalOption(w,el,'ASC'); 
@@ -34,6 +40,9 @@ prism.run([
 			}
 			else if(sortBreakByOption === "Reverse") {
 				executeSortBreakByReverseOption(w,el);
+			}
+			else if(sortBreakByOption === "Custom") {
+				executeSortBreakByCustomOption(w,el);
 			}
 			
 			if (addTotalOption === "Yes") { 
@@ -284,19 +293,84 @@ prism.run([
 				
 			}
 		}
-		/*
-		function executeSortBreakByReverseOption(w, args) {
-			//args.widget.queryResult.yAxis[0].reversedStacks = false;
-			var l = args.widget.queryResult.series.length;	
-			for(var i=0; i<l; i++) {
-				var sortRank = (l - i).toString();
-				if(sortRank.length == 1) {
-					sortRank = '0' + sortRank;
+		
+		
+		
+		function executeSortBreakByCustomOption(w, args) {
+			var customList = args.widget.custom.barcolumnchart.customBreakbyConfiguration;
+			if(customList === undefined || customList.length === 0) { return; }
+			for(var i=0; i<args.widget.queryResult.series.length; i++) {
+				var index = customList.indexOf(args.widget.queryResult.series[i].name);
+				if(index === -1) {
+					args.widget.queryResult.series[i].sortData = 'zzz' + args.widget.queryResult.series[i].sortData;
 				}
-				args.widget.queryResult.series[i].sortData = sortRank + args.widget.queryResult.series[i].sortData;
+				else if(index < 10) {
+					args.widget.queryResult.series[i].sortData = '0' + index + args.widget.queryResult.series[i].sortData;
+				}
+				else {
+					args.widget.queryResult.series[i].sortData = index + args.widget.queryResult.series[i].sortData;
+				}
 			}
 		}
-		*/
+		
+		
+		function executeSortCategoryCustomOption(w, args) {
+			var categories = $.extend(true, {},args.widget.queryResult.xAxis.categories); //save initial categories
+			var series = $.extend(true, {},args.widget.queryResult.series); //save initial series data results
+			var customList = args.widget.custom.barcolumnchart.customCategoryConfiguration;
+			if(customList === undefined || customList.length === 0) { return; }
+				
+			var sortCategoryOrder = [];
+			for(var a=0; a<args.widget.queryResult.xAxis.categories.length; a++) {
+				for(var b=0; b<args.widget.queryResult.series.length; b++) {
+					if(args.widget.queryResult.series[b].data[a].selectionData !== undefined && args.widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
+						var index = customList.indexOf(args.widget.queryResult.series[b].data[a].selectionData[0]);
+						if(index === -1) {
+							index = 100+a
+						}
+						sortCategoryOrder.push(index);
+						break;
+					}
+				}
+			}
+			
+			// temporary array holds objects with position and sort-value
+			var mapped = sortCategoryOrder.map(function(el, i) {
+				return { index: i, value: el };
+			})
+
+			// sorting the mapped array containing the reduced values
+			mapped.sort(function(a, b) {
+				return a.value - b.value;
+			});
+
+			// container for the resulting order
+			var result = mapped.map(function(el){
+				return sortCategoryOrder[el.index];
+			});
+			
+			//update the series data/categories to reflect the sorted mapping
+			for(var i=0; i<args.widget.queryResult.xAxis.categories.length; i++) {
+				for(var j=0; j<args.widget.queryResult.series.length; j++) {
+					args.widget.queryResult.series[j].data[i] = series[j].data[mapped[i].index];
+				}
+				args.widget.queryResult.xAxis.categories[i] = categories[mapped[i].index];
+			}
+		}
+		
+		
+		
+		function executeSortCategoryReverseOption(w, args) {
+			var categories = $.extend(true, {},args.widget.queryResult.xAxis.categories); //save initial categories
+			var series = $.extend(true, {},args.widget.queryResult.series); //save initial series data results
+			for(var i=0; i<args.widget.queryResult.xAxis.categories.length; i++) {
+				for(var j=0; j<args.widget.queryResult.series.length; j++) {
+					args.widget.queryResult.series[j].data[i] = series[j].data[args.widget.queryResult.xAxis.categories.length - i - 1];
+				}
+				args.widget.queryResult.xAxis.categories[i] = categories[args.widget.queryResult.xAxis.categories.length - i - 1];
+			}
+		}
+		
 		
     }
 ]);

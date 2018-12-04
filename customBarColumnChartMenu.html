@@ -33,7 +33,7 @@
 			<div class="checker-pane-title">SORT CATEGORIES</div>
 		</div>
 		<div class="type-holder">
-			<div data-ng-repeat="sortCategories in ['None', 'Asc by Total', 'Desc by Total']"
+			<div data-ng-repeat="sortCategories in ['None', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
 				 data-ng-class="{selected: sortCategories == sortCategoriesOption}"
 				 data-ng-click="changeSortCategories(sortCategories)"
 				 class="radio-option-item">
@@ -42,6 +42,8 @@
 				<div class="radio-option-separator"></div>
 				<div class="radio-option-caption">{{sortCategories}}</div>
 			</div>
+			<div class="radio-option-separator"></div>
+			<button id="customCategoryButton" class="btn">Configure Custom Settings</button>
 		</div>
 	</div>
 	
@@ -50,7 +52,7 @@
 			<div class="checker-pane-title">SORT BREAK BY</div>
 		</div>
 		<div class="type-holder">
-			<div data-ng-repeat="sortBreakBy in ['None', 'Reverse', 'Asc by Total', 'Desc by Total']"
+			<div data-ng-repeat="sortBreakBy in ['None', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
 				 data-ng-class="{selected: sortBreakBy == sortBreakByOption}"
 				 data-ng-click="changeSortBreakBy(sortBreakBy)"
 				 class="radio-option-item">
@@ -59,7 +61,25 @@
 				<div class="radio-option-separator"></div>
 				<div class="radio-option-caption">{{sortBreakBy}}</div>
 			</div>
+			<div class="radio-option-separator"></div>
+			<button id="customBreakbyButton" class="btn">Configure Custom Settings</button>
 		</div>
 	</div>
 	
+</div>
+
+<div id="custom-modal" class="custom-modal">
+	<div class="custom-modal-content">
+		<div class="custom-modal-header">
+			<span class="close">&times;</span>
+			<p id="custom-modal-header-title"></p>
+		</div>
+		<center>
+			<div id="custom-modal-body" class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
+		</center>
+		<div class="custom-modal-footer">
+			<h3 class='footer-title'>Closing the Configuration Page will automatically save your Custom Sorting Options</h3>
+			<button id="resetButton" class="btn">Reset Configuration</button>
+		</div>
+	</div>
 </div>
