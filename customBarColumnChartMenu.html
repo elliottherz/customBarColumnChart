@@ -33,7 +33,7 @@
 			<div class="checker-pane-title">SORT CATEGORIES</div>
 		</div>
 		<div class="type-holder">
-			<div data-ng-repeat="sortCategories in ['None', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
+			<div data-ng-repeat="sortCategories in ['Default', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
 				 data-ng-class="{selected: sortCategories == sortCategoriesOption}"
 				 data-ng-click="changeSortCategories(sortCategories)"
 				 class="radio-option-item">
@@ -52,7 +52,7 @@
 			<div class="checker-pane-title">SORT BREAK BY</div>
 		</div>
 		<div class="type-holder">
-			<div data-ng-repeat="sortBreakBy in ['None', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
+			<div data-ng-repeat="sortBreakBy in ['Default', 'Reverse', 'Asc by Total', 'Desc by Total', 'Custom']"
 				 data-ng-class="{selected: sortBreakBy == sortBreakByOption}"
 				 data-ng-click="changeSortBreakBy(sortBreakBy)"
 				 class="radio-option-item">
@@ -74,8 +74,9 @@
 			<span class="close">&times;</span>
 			<p id="custom-modal-header-title"></p>
 		</div>
-		<center>
-			<div id="custom-modal-body" class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
+		<center class="custom-modal-body-center">
+			<!-- <div id="custom-modal-body" class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div> -->
+			<div class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
 		</center>
 		<div class="custom-modal-footer">
 			<h3 class='footer-title'>Closing the Configuration Page will automatically save your Custom Sorting Options</h3>

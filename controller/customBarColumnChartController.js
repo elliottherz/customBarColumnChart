@@ -5,8 +5,8 @@ mod.controller('customBarColumnChartController', [
 		var widget = $scope.widget;
 		$scope.customMenuEnabled = $$get(widget, 'custom.barcolumnchart.customMenuEnabled') || false;
 		$scope.addTotalOption = $$get(widget, 'custom.barcolumnchart.addTotalOption') || 'No';
-		$scope.sortCategoriesOption = $$get(widget, 'custom.barcolumnchart.sortCategoriesOption') || 'None';
-		$scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'None';
+		$scope.sortCategoriesOption = $$get(widget, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
+		$scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
 		$scope.customBreakbyConfiguration = $$get(widget, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
 		$scope.customCategoryConfiguration = $$get(widget, 'custom.barcolumnchart.customCategoryConfiguration') || [];
 		
@@ -228,8 +228,8 @@ mod.controller('customBarColumnChartController', [
 				this.parentNode.removeChild(dragSrcEl);
 				var item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(dragSrcEl.textContent);
 				addDnDHandlers(item[0]);
-				if(placeItemBefore) { this.before(item[0]); }
-				else { this.after(item[0]); }
+				if(placeItemBefore) { $(this).before(item[0]); } //bug in jquery 1.9
+				else { $(this).after(item[0]); }
 		  }
 		  return false;
 		}
