@@ -324,7 +324,12 @@ prism.run([
 			for(var a=0; a<args.widget.queryResult.xAxis.categories.length; a++) {
 				for(var b=0; b<args.widget.queryResult.series.length; b++) {
 					if(args.widget.queryResult.series[b].data[a].selectionData !== undefined && args.widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
-						var index = customList.indexOf(args.widget.queryResult.series[b].data[a].selectionData[0]);
+						if(args.widget.queryResult.series[b].data[a].selectionData[0] instanceof Date) {
+							var index = customList.indexOf(args.widget.queryResult.series[b].data[a].selectionData[0].toISOString());
+						}
+						else {
+							var index = customList.indexOf(args.widget.queryResult.series[b].data[a].selectionData[0].toString());
+						}
 						if(index === -1) {
 							index = 100+a
 						}

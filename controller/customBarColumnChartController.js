@@ -24,15 +24,7 @@ mod.controller('customBarColumnChartController', [
 		
 		customResetButton.click(function() {
 			if(lastModalOpened === 'Category') {
-				var categoryNames = [];
-				for(var a=0; a<widget.queryResult.xAxis.categories.length; a++) {
-					for(var b=0; b<widget.queryResult.series.length; b++) {
-						if(widget.queryResult.series[b].data[a].selectionData !== undefined && widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
-							categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0]);
-							break;
-						}
-					}
-				}
+				var categoryNames = getCategoryNames().sort();
 				$scope.customCategoryConfiguration = categoryNames;
 				$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
 				prism.activeDashboard.$dashboard.updateWidget(widget);
@@ -46,10 +38,7 @@ mod.controller('customBarColumnChartController', [
 				[].forEach.call(cols, addDnDHandlers);
 			}
 			else if(lastModalOpened === 'BreakBy') {
-				var resetResult = []
-				for(var i=0; i<widget.queryResult.series.length; i++) {
-					resetResult.push(widget.queryResult.series[i].name);
-				}
+				var resetResult = getBreakbyNames().sort();
 				$scope.customBreakbyConfiguration = resetResult;
 				$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
 				prism.activeDashboard.$dashboard.updateWidget(widget);
@@ -69,16 +58,7 @@ mod.controller('customBarColumnChartController', [
 			$(customModal).css('display', 'block');
 			$('.trillapser-container').css('display', 'none');
 			$(customModalHeaderTitle).text("Custom Category Sort - Configuration Page");
-			
-			var categoryNames = [];
-			for(var a=0; a<widget.queryResult.xAxis.categories.length; a++) {
-				for(var b=0; b<widget.queryResult.series.length; b++) {
-					if(widget.queryResult.series[b].data[a].selectionData !== undefined && widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
-						categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0]);
-						break;
-					}
-				}
-			}
+			var categoryNames = getCategoryNames();
 			
 			//if first time clicking the button, then no configuration has been specified. Default to the current order of the breakby.
 			if($scope.customCategoryConfiguration === undefined || $scope.customCategoryConfiguration.length === 0) {
@@ -111,11 +91,8 @@ mod.controller('customBarColumnChartController', [
 			$(customModal).css('display', 'block');
 			$('.trillapser-container').css('display', 'none');
 			$(customModalHeaderTitle).text("Custom Break By Sort - Configuration Page");
+			var seriesNames = getBreakbyNames();
 			
-			var seriesNames = []; //gets current order of the BreakBy
-			for(var i=0; i<widget.queryResult.series.length; i++) {
-				seriesNames.push(widget.queryResult.series[i].name);
-			}
 			//if first time clicking the button, then no configuration has been specified. Default to the current order of the breakby.
 			if($scope.customBreakbyConfiguration === undefined || $scope.customBreakbyConfiguration.length === 0) {
 				$scope.customBreakbyConfiguration = seriesNames;
@@ -292,6 +269,34 @@ mod.controller('customBarColumnChartController', [
 			$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
 			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
+		}
+		
+		
+		function getCategoryNames() {
+			var categoryNames = [];
+			for(var a=0; a<widget.queryResult.xAxis.categories.length; a++) {
+				for(var b=0; b<widget.queryResult.series.length; b++) {
+					if(widget.queryResult.series[b].data[a].selectionData !== undefined && widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
+						if(prism.$ngscope.widget.queryResult.series[b].data[a].selectionData[0] instanceof Date) {
+							categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toISOString());
+						}
+						else {
+							categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toString());
+						}
+						break;
+					}
+				}
+			}
+			return categoryNames;
+		}
+		
+		
+		function getBreakbyNames() {
+			var seriesNames = []; //gets current order of the BreakBy
+			for(var i=0; i<widget.queryResult.series.length; i++) {
+				seriesNames.push(widget.queryResult.series[i].name);
+			}
+			return seriesNames
 		}
 		
     }
