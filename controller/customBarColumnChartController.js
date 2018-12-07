@@ -10,16 +10,18 @@ mod.controller('customBarColumnChartController', [
 		$scope.customBreakbyConfiguration = $$get(widget, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
 		$scope.customCategoryConfiguration = $$get(widget, 'custom.barcolumnchart.customCategoryConfiguration') || [];
 		
-		var customModal = $('#custom-modal');
+		var customModal = $('#custom-modal-overlay');
 		var customModalHeaderTitle = $("#custom-modal-header-title");
 		var customCategoryBtn = $("#customCategoryButton");
 		var customBreakbyBtn = $("#customBreakbyButton");
-		var customSpan = document.getElementsByClassName("close")[0];
 		var customModalBody = $('#custom-modal-body');
 		var customModalBodyList = $('#custom-modal-body-list');
 		var customResetButton = $('#resetButton');
+		var customSaveButton = $("#saveButton");
+		var customCancelButton = $("#cancelButton");
 		var dragSrcEl = null;
 		var lastModalOpened = null;
+		const defaultTotalSortValue = 'zzzzzzTotal';
 
 		
 		customResetButton.click(function() {
@@ -118,15 +120,20 @@ mod.controller('customBarColumnChartController', [
 			[].forEach.call(cols, addDnDHandlers);
 		});
 		
+		customCancelButton.click(function() {
+			$(customModal).css('display', 'none');
+			$('.trillapser-container').css('display', 'block');
+		});
 		
-		customSpan.onclick = function() { // When the user clicks on <span> (x), close the modal
+		customSaveButton.click(function() {
 			if(lastModalOpened === 'Category') {
 				saveCustomCateogry();
 			}
 			else if(lastModalOpened === 'BreakBy') {
 				saveCustomBreakBy();
 			}
-		}
+		});
+		
 		window.onclick = function(event) { // When the user clicks anywhere outside of the modal, close it
 			if (event.target == customModal[0]) {
 				if(lastModalOpened === 'Category') {
@@ -294,7 +301,9 @@ mod.controller('customBarColumnChartController', [
 		function getBreakbyNames() {
 			var seriesNames = []; //gets current order of the BreakBy
 			for(var i=0; i<widget.queryResult.series.length; i++) {
-				seriesNames.push(widget.queryResult.series[i].name);
+				if(!widget.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
+					seriesNames.push(widget.queryResult.series[i].name);
+				}				
 			}
 			return seriesNames
 		}

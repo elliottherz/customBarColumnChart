@@ -68,19 +68,23 @@
 	
 </div>
 
-<div id="custom-modal" class="custom-modal">
-	<div class="custom-modal-content">
-		<div class="custom-modal-header">
-			<span class="close">&times;</span>
-			<p id="custom-modal-header-title"></p>
-		</div>
-		<center class="custom-modal-body-center">
-			<!-- <div id="custom-modal-body" class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div> -->
-			<div class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
-		</center>
-		<div class="custom-modal-footer">
-			<h3 class='footer-title'>Closing the Configuration Page will automatically save your Custom Sorting Options</h3>
-			<button id="resetButton" class="btn">Reset Configuration</button>
+<div id="custom-modal-overlay" class="custom-modal-overlay">
+	<div id="custom-modal" class="custom-modal">
+		<div class="custom-modal-content">
+			<div class="custom-modal-header">
+				<p id="custom-modal-header-title"></p>
+				<div class="header-line"></div>
+			</div>
+			<div class="custom-modal-body-container">
+				<center class="custom-modal-body-center">
+					<div class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
+				</center>
+				<div class="custom-modal-footer">
+					<button id="resetButton" class="btn">Reset Config</button>
+					<button id="cancelButton" class="btn">Cancel</button>
+					<button id="saveButton" class="btn">Save Config</button>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
