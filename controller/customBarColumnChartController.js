@@ -9,6 +9,12 @@ mod.controller('customBarColumnChartController', [
 		$scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
 		$scope.customBreakbyConfiguration = $$get(widget, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
 		$scope.customCategoryConfiguration = $$get(widget, 'custom.barcolumnchart.customCategoryConfiguration') || [];
+		//total point customizations
+		$scope.totalPointColor = $$get(widget, 'custom.barcolumnchart.totalPointColor') || 'black';
+		$scope.totalPointFontSize = $$get(widget, 'custom.barcolumnchart.totalPointFontSize') || '11px';
+		$scope.totalPointSize = $$get(widget, 'custom.barcolumnchart.totalPointSize') || '5';
+		$scope.totalPointFontFamily = $$get(widget, 'custom.barcolumnchart.totalPointFontFamily') || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
+		$scope.totalAsLine = $$get(widget, 'custom.barcolumnchart.totalAsLine') || false;
 		
 		var customModal = $('#custom-modal-overlay');
 		var customModalHeaderTitle = $("#custom-modal-header-title");
@@ -123,6 +129,7 @@ mod.controller('customBarColumnChartController', [
 		customCancelButton.click(function() {
 			$(customModal).css('display', 'none');
 			$('.trillapser-container').css('display', 'block');
+			widget.redraw();
 		});
 		
 		customSaveButton.click(function() {

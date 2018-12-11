@@ -41,7 +41,6 @@
     top: 0;
     width: 100%;
     height: 100%;
-    #background-color: #080e18;
 	background-color: rgba(8,14,24,0.7);
 	transition: all .3s;
 }
@@ -51,7 +50,7 @@
 	top: 10%;
 	left: 10%;
 	width: 80%;
-	height: 80%;
+	max-height: 80%;
 	z-index: 2000;
 	box-sizing: border-box;
 	display: block;
@@ -97,7 +96,6 @@
 .custom-modal-body-container {
 	background: white;
 	padding: 10px;
-	#overflow: hidden;
 	height: 498px;
 }
 

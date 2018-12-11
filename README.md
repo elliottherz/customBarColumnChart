@@ -1,8 +1,8 @@
 #############################################################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Dec-07-2018 by Elliott Herz
-#	Current Version: V2.1.0
+#	Last Modified on Dec-11-2018 by Elliott Herz
+#	Current Version: V2.2.0
 #############################################################################################################################################
 
 
@@ -24,5 +24,5 @@ IF YOU FIND ANY ISSUES, PLEASE EMAIL: Elliott.Herz@sisense.com
 4) Can't scroll most of the time in the modal popup.
 5) Plugin won't take effect when switching chart types (including during the intial creation of the widget). Just hit apply and then refresh.
 6) During the export, the total points are connected with a line (this is due to the phantom process being run in IE10).
-7) Currently doesn't support more than 1 field in the Categories Section.
+7) Currently doesn't support more than 1 field in the Categories Section. Doesn't work with a combination of different charts (such as a column with a line)
 *********************************************************************************************************************************************

@@ -16,6 +16,7 @@ prism.run([
 			var addTotalOption = $$get(el.widget, 'custom.barcolumnchart.addTotalOption');
 			var sortCategoriesOption = $$get(el.widget, 'custom.barcolumnchart.sortCategoriesOption');
 			var sortBreakByOption = $$get(el.widget, 'custom.barcolumnchart.sortBreakByOption');
+			
             if (!customMenuEnabled || !isTypeValid) { return; }
             var config = $styleService.getConfig(el.widget);
 			
@@ -57,6 +58,13 @@ prism.run([
 		function executeAddTotalOption(w, args) {
 			if(w.subtype === "column/stackedcolumn100" || w.subtype === "bar/stacked100") { return; }
 			
+			//configurations
+			var totalPointColor = $$get(args.widget, 'custom.barcolumnchart.totalPointColor') || 'black';
+			var totalPointFontSize = $$get(args.widget, 'custom.barcolumnchart.totalPointFontSize') || '11px';
+			var totalPointSize = $$get(args.widget, 'custom.barcolumnchart.totalPointSize') || '5';
+			var totalAsLine = $$get(args.widget, 'custom.barcolumnchart.totalAsLine') || false;
+			var totalPointFontFamily = $$get(args.widget, 'custom.barcolumnchart.totalPointFontFamily') || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
+			
 			var columnTotals = []; //list to store total values
 			var series = $.extend(true, {},args.widget.queryResult.series); //save initial series data results
 			var maxValue = -99999999999999999999999999999; //used to update the widget xAxis.max value
@@ -84,7 +92,7 @@ prism.run([
 			}
 			
 			var totalCategory = {
-				'color': 'black',
+				'color': totalPointColor,
 				'data': [],
 				'mask': series[0].mask,
 				'name': 'Total',
@@ -109,15 +117,17 @@ prism.run([
 			args.widget.queryResult.yAxis[0].max = maxValue * 1.05; //update the max value of the yAxis so the value label displays for the max total
 			args.widget.queryResult.yAxis[0].endOnTick = false; //ensure that the chart doesn't waste extra white space due to highchart auto sizing.
 			
-			args.widget.queryResult.plotOptions.series.lineWidth = 0.00001;
-			args.widget.queryResult.plotOptions.series.states.hover.lineWidth = 0.00001;
-			args.widget.queryResult.plotOptions.series.marker.radius = 5;
-			args.widget.queryResult.plotOptions.series.states.hover.lineWidthPlus = 0;
+			if(totalAsLine) {}
+			else {
+				args.widget.queryResult.plotOptions.series.lineWidth = 0.00001;
+				args.widget.queryResult.plotOptions.series.states.hover.lineWidth = 0.00001;
+				args.widget.queryResult.plotOptions.series.states.hover.lineWidthPlus = 0;
+			}
+			args.widget.queryResult.plotOptions.series.marker.radius = totalPointSize;
+			args.widget.queryResult.plotOptions.series.marker.states.hover.radius = totalPointSize;
+			args.widget.queryResult.plotOptions.series.marker.fillColor = totalPointColor;
+			args.widget.queryResult.plotOptions.series.marker.lineColor = totalPointColor;
 			args.widget.queryResult.plotOptions.series.marker.states.hover.fillColor = 'white';
-			args.widget.queryResult.plotOptions.series.marker.states.hover.radius = 5;
-			args.widget.queryResult.plotOptions.series.marker.fillColor = 'black';
-			args.widget.queryResult.plotOptions.series.marker.lineColor = 'black';
-			
 			
 			if(w.subtype === "column/classic" || w.subtype === "bar/classic") {
 				for(var i=0; i<args.widget.queryResult.series.length; i++) {
@@ -126,10 +136,10 @@ prism.run([
 							args.widget.queryResult.series[i].dataLabels = {
 								enabled: true,
 								style: {
-									color: "black",
-									fontSize: "11px",
+									color: totalPointColor,
+									fontSize: totalPointFontSize,
 									fontWeight: "bold",
-									fontFamily: '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif',
+									fontFamily: totalPointFontFamily,
 									lineHeight: "normal",
 									textOutline: "1px contrast"
 								},
@@ -146,7 +156,7 @@ prism.run([
 			else {
 				args.widget.queryResult.yAxis[0].stackLabels = {
 					enabled: true,
-					color: 'black',
+					color: totalPointColor,
 					mask: args.widget.queryResult.series[0].mask,
 					formatWithCommas: function(x) {	
 						return Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -158,6 +168,14 @@ prism.run([
 						var func2=this.options.formatWithCommas;
 						//	Apply the formatting
 						return defined(func1)?func1(this.total):func2(this.total);
+					},
+					style: {
+						color: totalPointColor,
+						fontSize: totalPointFontSize,
+						fontWeight: "bold",
+						fontFamily: totalPointFontFamily,
+						lineHeight: "normal",
+						textOutline: "1px contrast"
 					}
 				};
 			}
