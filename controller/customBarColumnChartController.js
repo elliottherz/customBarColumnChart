@@ -1,6 +1,6 @@
 mod.controller('customBarColumnChartController', [
-    '$scope',
-    function ($scope) {
+	'$scope',
+	function ($scope) {
 		// Sets default values for Design menu or gets values from widget.custom
 		var widget = $scope.widget;
 		$scope.customMenuEnabled = $$get(widget, 'custom.barcolumnchart.customMenuEnabled') || false;
@@ -20,7 +20,6 @@ mod.controller('customBarColumnChartController', [
 		var customModalHeaderTitle = $("#custom-modal-header-title");
 		var customCategoryBtn = $("#customCategoryButton");
 		var customBreakbyBtn = $("#customBreakbyButton");
-		var customModalBody = $('#custom-modal-body');
 		var customModalBodyList = $('#custom-modal-body-list');
 		var customResetButton = $('#resetButton');
 		var customSaveButton = $("#saveButton");
@@ -33,13 +32,9 @@ mod.controller('customBarColumnChartController', [
 		customResetButton.click(function() {
 			if(lastModalOpened === 'Category') {
 				var categoryNames = getCategoryNames().sort();
-				$scope.customCategoryConfiguration = categoryNames;
-				$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);
-				
 				customModalBodyList.empty(); //clear out configuration page, and redisplay current configuration
-				for(var k=0; k<$scope.customCategoryConfiguration.length; k++) {
-					var item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text($scope.customCategoryConfiguration[k]);
+				for(var k=0; k<categoryNames.length; k++) {
+					var item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(categoryNames[k]);
 					customModalBodyList.append(item);
 				}
 				var cols = document.querySelectorAll('.custom-modal-body-list-item');
@@ -47,13 +42,9 @@ mod.controller('customBarColumnChartController', [
 			}
 			else if(lastModalOpened === 'BreakBy') {
 				var resetResult = getBreakbyNames().sort();
-				$scope.customBreakbyConfiguration = resetResult;
-				$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);
-				
 				customModalBodyList.empty(); //clear out configuration page, and redisplay current configuration
-				for(var k=0; k<$scope.customBreakbyConfiguration.length; k++) {
-					var item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text($scope.customBreakbyConfiguration[k]);
+				for(var k=0; k<resetResult.length; k++) {
+					var item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(resetResult[k]);
 					customModalBodyList.append(item);
 				}
 				var cols = document.querySelectorAll('.custom-modal-body-list-item');
@@ -72,7 +63,6 @@ mod.controller('customBarColumnChartController', [
 			if($scope.customCategoryConfiguration === undefined || $scope.customCategoryConfiguration.length === 0) {
 				$scope.customCategoryConfiguration = categoryNames;
 				$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);
 			}
 			else { //check to see if there are any new values in the breakby, if there are, add them to the end of the configuration
 				for(var j=0; j<categoryNames.length; j++) {
@@ -80,8 +70,7 @@ mod.controller('customBarColumnChartController', [
 						$scope.customCategoryConfiguration.push(categoryNames[j]);
 					}
 				}
-				$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);				
+				$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);			
 			}
 			
 			customModalBodyList.empty(); //clear out configuration page, and redisplay current configuration
@@ -105,7 +94,6 @@ mod.controller('customBarColumnChartController', [
 			if($scope.customBreakbyConfiguration === undefined || $scope.customBreakbyConfiguration.length === 0) {
 				$scope.customBreakbyConfiguration = seriesNames;
 				$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);
 			}
 			else { //check to see if there are any new values in the breakby, if there are, add them to the end of the configuration
 				for(var j=0; j<seriesNames.length; j++) {
@@ -113,8 +101,7 @@ mod.controller('customBarColumnChartController', [
 						$scope.customBreakbyConfiguration.push(seriesNames[j]);
 					}
 				}
-				$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-				prism.activeDashboard.$dashboard.updateWidget(widget);				
+				$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);			
 			}
 			
 			customModalBodyList.empty(); //clear out configuration page, and redisplay current configuration
@@ -161,32 +148,27 @@ mod.controller('customBarColumnChartController', [
 			//can't reload the widget to render the customizations during a switch of a chart.
         });
 
-        // triggers on customMenuEnabled changed
-        $scope.enabledChanged = function (customMenuEnabled) {
+        $scope.enabledChanged = function (customMenuEnabled) { //triggers on customMenuEnabled changed
             $scope.customMenuEnabled = !$scope.customMenuEnabled;
             $$set(widget, 'custom.barcolumnchart.customMenuEnabled', $scope.customMenuEnabled);
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
         };
 
         $scope.changeAddTotal = function (addTotal) {
             $$set(widget, 'custom.barcolumnchart.addTotalOption', addTotal);
             $scope.addTotalOption = addTotal;
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
         };
 		
 		$scope.changeSortCategories = function (sortCategories) {
             $$set(widget, 'custom.barcolumnchart.sortCategoriesOption', sortCategories);
             $scope.sortCategoriesOption = sortCategories;
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
         };
 		
 		$scope.changeSortBreakBy = function (sortBreakBy) {
             $$set(widget, 'custom.barcolumnchart.sortBreakByOption', sortBreakBy);
             $scope.sortBreakByOption = sortBreakBy;
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
         };
 		
@@ -265,7 +247,6 @@ mod.controller('customBarColumnChartController', [
 			}
 			$scope.customBreakbyConfiguration = breakByValues;
 			$$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
 		}
 
@@ -281,7 +262,6 @@ mod.controller('customBarColumnChartController', [
 			}
 			$scope.customCategoryConfiguration = categoryValues;
 			$$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-			prism.activeDashboard.$dashboard.updateWidget(widget);
 			widget.redraw();
 		}
 		
