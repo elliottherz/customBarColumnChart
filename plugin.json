@@ -1,17 +1,18 @@
 {
     "name": "customBarColumnChart",
     "source": [
-        "controller/customBarColumnChartController.js",
-        "directive/directive.js",
-        "directive/directiveReporting.js",
-        "service/service.js",
-        "main.js"
+        "controller/customBarColumnChartController.6.js",
+        "directive/directive.6.js",
+        "directive/directiveReporting.6.js",
+        "service/service.6.js",
+        "main.6.js"
     ],
     "style": [
         "style.css"
     ],
-    "lastUpdate": "2018-12-13T02:43:54.012Z",
+    "lastUpdate": "2018-12-16T23:43:11.267Z",
     "folderName": "customBarColumnChart",
     "isEnabled": true,
-    "version": "2.2.1"
+    "version": "2.3.0",
+    "pluginInfraVersion": 2
 }
