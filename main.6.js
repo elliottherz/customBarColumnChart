@@ -2,6 +2,8 @@ prism.run([
     'plugin-customBarColumnChart.services.customBarColumnChartService',
     () => {
         const defaultTotalSortValue = 'zzzzzzTotal';
+        let prevConfiguration = null;
+        let prevWidgetId = null;
 
         // ---------------------------------------------Totals Option---------------------------------------------------
         // Execute the Show Totals customization when the selection is 'Yes'
@@ -388,9 +390,15 @@ prism.run([
         };
 
 
-        // --------------------------------Dashboard Loaded + Render Events---------------------------------------------
+        // ------------------------------------On Widget Render Event---------------------------------------------------
         // Envoke users selected customiations during widget render event
         const onWidgetRender = (el, args) => {
+            if (args.widget.custom === undefined && prevWidgetId === args.widget.oid) { // Need to check if same widget
+                args.widget.custom = prevConfiguration; // Set the config if one used to exist, or default to null
+            }
+            prevConfiguration = args.widget.custom; // Temporarily save the current configuration
+            prevWidgetId = args.widget.oid; // Savae the current widgetID
+
             const isTypeValid = $$get(args.widget, 'custom.barcolumnchart.isTypeValid');
             const customMenuEnabled = $$get(args.widget, 'custom.barcolumnchart.customMenuEnabled');
             const addTotalOption = $$get(args.widget, 'custom.barcolumnchart.addTotalOption');
@@ -428,12 +436,15 @@ prism.run([
             }
         };
 
+        const registerToRenderEvent = (el, args) => {
+            args.widget.on('render', onWidgetRender);
+        };
 
-        // Main function for the plugin, envoked during the dashboard loaded event
+        // Main functions for the plugin, envoked during the dashboard loaded event + widget added/loaded events
+        prism.on('widgetloaded', registerToRenderEvent);
         prism.on('dashboardloaded', (el, args) => {
-            args.dashboard.on('widgetinitialized', (dash, ar) => {
-                ar.widget.on('render', onWidgetRender);
-            });
+            args.dashboard.on('widgetadded', registerToRenderEvent);
+            args.dashboard.on('widgetinitialized', registerToRenderEvent);
         });
     },
 ]);

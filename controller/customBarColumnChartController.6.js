@@ -123,7 +123,7 @@ mod.controller('customBarColumnChartController', [
             }
             $scope.customBreakbyConfiguration = breakByValues;
             $$set(widg, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-            widg.redraw();
+            $scope.widget.redraw();
         };
 
 
@@ -139,7 +139,7 @@ mod.controller('customBarColumnChartController', [
             }
             $scope.customCategoryConfiguration = categoryValues;
             $$set(widg, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-            widg.redraw();
+            $scope.widget.redraw();
         };
 
 
@@ -330,7 +330,7 @@ mod.controller('customBarColumnChartController', [
         customCancelButton.click(() => {
             $(customModal).css('display', 'none');
             $('.trillapser-container').css('display', 'block');
-            widg.redraw();
+            $scope.widget.redraw();
         });
 
 
@@ -362,40 +362,38 @@ mod.controller('customBarColumnChartController', [
             $$set(widg, 'custom.barcolumnchart.type', $scope.type);
             $scope.isTypeValid = $scope.type === 'chart/bar' || $scope.type === 'chart/column';
             $$set(widg, 'custom.barcolumnchart.isTypeValid', $scope.isTypeValid);
-            // Widget.refresh();
-            // can't reload the widget to render the customizations during a switch of a chart.
         });
 
 
-        // Triggers on customMenuEnabled changed
+        // ---------------------------------Triggers on customMenuEnabled changed---------------------------------------
         $scope.enabledChanged = () => {
             $scope.customMenuEnabled = !$scope.customMenuEnabled;
             $$set(widg, 'custom.barcolumnchart.customMenuEnabled', $scope.customMenuEnabled);
-            widg.redraw();
+            $scope.widget.redraw();
         };
 
 
-        // Triggers on showTotals radio selection changed
+        // -----------------------------Triggers on showTotals radio selection changed----------------------------------
         $scope.changeAddTotal = (addTotal) => {
             $$set(widg, 'custom.barcolumnchart.addTotalOption', addTotal);
             $scope.addTotalOption = addTotal;
-            widg.redraw();
+            $scope.widget.redraw();
         };
 
 
-        // Triggers on sortCategories radio selection changed
+        // ----------------------------Triggers on sortCategories radio selection changed-------------------------------
         $scope.changeSortCategories = (sortCategories) => {
             $$set(widg, 'custom.barcolumnchart.sortCategoriesOption', sortCategories);
             $scope.sortCategoriesOption = sortCategories;
-            widg.redraw();
+            $scope.widget.redraw();
         };
 
 
-        // Triggers on sortBreakBy radio selection changed
+        // -------------------------------Triggers on sortBreakBy radio selection changed-------------------------------
         $scope.changeSortBreakBy = (sortBreakBy) => {
             $$set(widg, 'custom.barcolumnchart.sortBreakByOption', sortBreakBy);
             $scope.sortBreakByOption = sortBreakBy;
-            widg.redraw();
+            $scope.widget.redraw();
         };
     },
 ]);
