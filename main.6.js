@@ -141,6 +141,29 @@ prism.run([
             const { queryResult: queryRes } = args.widget;
             const categories = $.extend(true, {}, queryRes.xAxis.categories); // Save initial categories
             const series = $.extend(true, {}, queryRes.series); // Save initial series data results
+            try { // Check to see if the category is already reversed
+                let val1;
+                let val2;
+                for (let i = 0; i < queryRes.series.length; i++) {
+                    if (queryRes.series[i].data[0].selectionData !== undefined) {
+                        // eslint-disable-next-line prefer-destructuring
+                        val1 = queryRes.series[i].data[0].selectionData[0];
+                        break;
+                    }
+                }
+                for (let i = 0; i < queryRes.series.length; i++) {
+                    if (queryRes.series[i].data[1].selectionData !== undefined) {
+                        // eslint-disable-next-line prefer-destructuring
+                        val2 = queryRes.series[i].data[1].selectionData[0];
+                        break;
+                    }
+                }
+                if (val1 > val2) { return; }
+            } catch (err) {
+                // Pass
+            }
+
+            // Reverse the Catgory data + xAxis Category
             for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
                 for (let j = 0; j < queryRes.series.length; j++) {
                     queryRes.series[j].data[i] = series[j].data[queryRes.xAxis.categories.length - i - 1];
@@ -148,6 +171,7 @@ prism.run([
                 queryRes.xAxis.categories[i] = categories[queryRes.xAxis.categories.length - i - 1];
             }
         };
+
 
         // Sort Categories by Asc/Desc based on the totals
         const executeSortCategoriesOption = (el, args, sortType) => {
@@ -203,7 +227,7 @@ prism.run([
                         } else {
                             index = customList.indexOf(queryRes.series[b].data[a].selectionData[0].toString());
                         }
-                        if (index === -1) {
+                        if (index === -1) { // Add values to the end of the list if they are not in the customList
                             index = 100 + a;
                         }
                         sortCategoryOrder.push(index);
@@ -228,6 +252,7 @@ prism.run([
         // --------------------------------------------Break By Sorts---------------------------------------------------
         // Sort the Break By in reverse order
         const executeSortBreakByReverseOption = (el, args) => {
+            const delim = '|~|'; // Delimiter
             const sortDataValues = [];
             const { queryResult: queryRes } = args.widget;
             // Sort the breakby sort values...for some reason they aren't always in order
@@ -236,6 +261,10 @@ prism.run([
                     sortDataValues.push(queryRes.series[i].name);
                 } else if (queryRes.series[i].sortData instanceof Date) { // Check if date to convert to ISO
                     sortDataValues.push(queryRes.series[i].sortData.toISOString());
+                } else if (queryRes.series[i].sortData.lastIndexOf(delim) > 0) {
+                    // If string was already sorted in reverse, strip last reverse sort values
+                    sortDataValues.push(queryRes.series[i].sortData
+                        .substring(queryRes.series[i].sortData.lastIndexOf(delim) + 3));
                 } else {
                     sortDataValues.push(queryRes.series[i].sortData);
                 }
@@ -249,19 +278,19 @@ prism.run([
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = indexStr + queryRes.series[k].name;
+                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].name}`;
                 } else if (queryRes.series[k].sortData instanceof Date) {
                     indexStr = sortDataValues.indexOf(queryRes.series[k].sortData.toISOString()).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = indexStr + queryRes.series[k].sortData.toISOString();
+                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].sortData.toISOString()}`;
                 } else {
                     indexStr = sortDataValues.indexOf(queryRes.series[k].sortData).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = indexStr + queryRes.series[k].sortData;
+                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].sortData}`;
                 }
             }
         };
@@ -440,8 +469,7 @@ prism.run([
             args.widget.on('render', onWidgetRender);
         };
 
-        // Main functions for the plugin, envoked during the dashboard loaded event + widget added/loaded events
-        prism.on('widgetloaded', registerToRenderEvent);
+        // Main functions for the plugin, envoked during the widget added + init events
         prism.on('dashboardloaded', (el, args) => {
             args.dashboard.on('widgetadded', registerToRenderEvent);
             args.dashboard.on('widgetinitialized', registerToRenderEvent);
