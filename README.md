@@ -1,8 +1,8 @@
 ########################################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Dec-18-2018 by Elliott Herz
-#	Current Version: V2.4.1
+#	Last Modified on Dec-20-2018 by Elliott Herz
+#	Current Version: V2.4.2
 ########################################################################################################################
 
 
@@ -15,11 +15,6 @@ IF YOU FIND ANY ISSUES, PLEASE EMAIL: Elliott.Herz@sisense.com
 3) Edit widget and on the Design Panel activate "CUSTOMIZE CHART" option
 4) Play around with a few options
 5) EASY SUCCESS! =D
-
-
-# Future Enhancements
-1) When no Category exists, default the SORT CATEOGRIES to Default, hide that part of the menu.
-2) When no Break By exists, default the SORT BREAK BY to Default, hide that part of the menu.
 
 
 # Limitations

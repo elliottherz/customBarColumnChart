@@ -17,25 +17,36 @@ prism.run([
             const totalPointFontFamily = $$get(args.widget, 'custom.barcolumnchart.totalPointFontFamily')
                 || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
             const totalAsLine = $$get(args.widget, 'custom.barcolumnchart.totalAsLine') || false;
-            const totalYAxisPercentSpacing = $$get(args.widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 5;
+            const totalYAxisPercentSpacing = $$get(args.widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 6;
+
+            let defaultLabelPadding;
+            if (el.subtype === 'bar/classic' || el.subtype === 'column/stackedcolumn') {
+                defaultLabelPadding = 6;
+            } else if (el.subtype === 'column/classic') {
+                defaultLabelPadding = 3;
+            } else {
+                defaultLabelPadding = undefined;
+            }
+            const totalLabelPadding = $$get(args.widget, 'custom.barcolumnchart.totalLabelPadding')
+                || defaultLabelPadding;
 
             const columnTotals = []; // List to store total values
-            const { queryResult: queryRes } = args.widget;
-            const series = $.extend(true, {}, queryRes.series); // Save initial series
+            const { queryResult } = args.widget;
+            const { series } = queryResult;
             let maxValue = -999999999999999999999; // Used to update the widget xAxis.max value
 
             // Loop through the results and calculate the bar totals
-            for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
+            for (let i = 0; i < queryResult.xAxis.categories.length; i++) {
                 let total = 0;
-                for (let j = 0; j < queryRes.series.length; j++) {
+                for (let j = 0; j < series.length; j++) {
                     try { // If the widget already has totals, don't add more totals
-                        if (queryRes.series[j].sortData.includes(defaultTotalSortValue)) { return; }
+                        if (series[j].sortData.includes(defaultTotalSortValue)) { return; }
                     } catch (err) {
                         // Do nothing but catch the exception
                     }
 
-                    if (queryRes.series[j].data[i].y !== null) {
-                        total += queryRes.series[j].data[i].y;
+                    if (series[j].data[i].y !== null) {
+                        total += series[j].data[i].y;
                     }
                 }
 
@@ -55,10 +66,10 @@ prism.run([
                 type: 'line',
             };
 
-            for (let k = 0; k < queryRes.xAxis.categories.length; k++) {
-                for (let a = 0; a < queryRes.series.length; a++) {
-                    if (queryRes.series[a].data[k].selectionData !== undefined) {
-                        const temp = $.extend(true, {}, queryRes.series[a].data[k]);
+            for (let k = 0; k < queryResult.xAxis.categories.length; k++) {
+                for (let a = 0; a < series.length; a++) {
+                    if (series[a].data[k].selectionData !== undefined) {
+                        const temp = $.extend(true, {}, series[a].data[k]);
                         temp.y = columnTotals[k];
                         temp.marker.enabled = true; // Force markers to be enabled so the total points are always shown
                         totalCategory.data.push(temp);
@@ -67,30 +78,30 @@ prism.run([
                 }
             }
 
-            queryRes.series.push(totalCategory);
+            series.push(totalCategory);
             // Update the max value of the yAxis so the value label displays for the max total
-            queryRes.yAxis[0].max = maxValue * (1 + totalYAxisPercentSpacing * 0.01);
+            queryResult.yAxis[0].max = maxValue * (1 + totalYAxisPercentSpacing * 0.01);
             // Ensure that the chart doesn't waste extra white space due to highchart auto sizing.
-            queryRes.yAxis[0].endOnTick = false;
-            const { plotOptions: plotOpt } = queryRes;
+            queryResult.yAxis[0].endOnTick = false;
+            const { series: plotOptSeries } = queryResult.plotOptions;
 
             if (!totalAsLine) {
-                plotOpt.series.lineWidth = 0.00001;
-                plotOpt.series.states.hover.lineWidth = 0.00001;
-                plotOpt.series.states.hover.lineWidthPlus = 0;
+                plotOptSeries.lineWidth = 0.00001;
+                plotOptSeries.states.hover.lineWidth = 0.00001;
+                plotOptSeries.states.hover.lineWidthPlus = 0;
             }
-            plotOpt.series.marker.radius = totalPointSize;
-            plotOpt.series.marker.states.hover.radius = totalPointSize;
-            plotOpt.series.marker.states.select.radius = totalPointSize;
-            plotOpt.series.marker.fillColor = totalPointColor;
-            plotOpt.series.marker.lineColor = totalPointColor;
-            plotOpt.series.marker.states.hover.fillColor = 'white';
+            plotOptSeries.marker.radius = totalPointSize;
+            plotOptSeries.marker.states.hover.radius = totalPointSize;
+            plotOptSeries.marker.states.select.radius = totalPointSize;
+            plotOptSeries.marker.fillColor = totalPointColor;
+            plotOptSeries.marker.lineColor = totalPointColor;
+            plotOptSeries.marker.states.hover.fillColor = 'white';
 
             if (el.subtype === 'column/classic' || el.subtype === 'bar/classic') {
-                for (let i = 0; i < queryRes.series.length; i++) {
+                for (let i = 0; i < series.length; i++) {
                     try {
-                        if (queryRes.series[i].sortData.includes(defaultTotalSortValue)) {
-                            queryRes.series[i].dataLabels = {
+                        if (series[i].sortData.includes(defaultTotalSortValue)) {
+                            series[i].dataLabels = {
                                 enabled: true,
                                 style: {
                                     color: totalPointColor,
@@ -100,8 +111,8 @@ prism.run([
                                     lineHeight: 'normal',
                                     textOutline: '1px contrast',
                                 },
-                                padding: el.subtype === 'column/classic' ? 3 : 6,
-                                y: 0,
+                                padding: totalLabelPadding,
+                                y: el.subtype === 'bar/classic' ? 3 : 0,
                                 x: 0,
                             };
                         }
@@ -110,10 +121,10 @@ prism.run([
                     }
                 }
             } else {
-                queryRes.yAxis[0].stackLabels = {
+                queryResult.yAxis[0].stackLabels = {
                     enabled: true,
                     color: totalPointColor,
-                    mask: queryRes.series[0].mask,
+                    mask: series[0].mask,
                     formatWithCommas(x) {
                         return Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                     },
@@ -130,6 +141,8 @@ prism.run([
                         lineHeight: 'normal',
                         textOutline: '1px contrast',
                     },
+                    y: el.subtype === 'column/stackedcolumn' ? -totalLabelPadding : 5,
+                    x: el.subtype === 'column/stackedcolumn' ? 0 : totalLabelPadding,
                 };
             }
         };
@@ -138,23 +151,25 @@ prism.run([
         // --------------------------------------------Category Sorts---------------------------------------------------
         // Sort Categories in Reverse Order
         const executeSortCategoryReverseOption = (el, args) => {
-            const { queryResult: queryRes } = args.widget;
-            const categories = $.extend(true, {}, queryRes.xAxis.categories); // Save initial categories
-            const series = $.extend(true, {}, queryRes.series); // Save initial series data results
+            const { series } = args.widget.queryResult;
+            const origSeries = $.extend(true, {}, series); // Save initial series data results
+            const { categories } = args.widget.queryResult.xAxis;
+            const origCategories = $.extend(true, {}, categories); // Save initial categories
+
             try { // Check to see if the category is already reversed
                 let val1;
                 let val2;
-                for (let i = 0; i < queryRes.series.length; i++) {
-                    if (queryRes.series[i].data[0].selectionData !== undefined) {
+                for (let i = 0; i < series.length; i++) {
+                    if (series[i].data[0].selectionData !== undefined) {
                         // eslint-disable-next-line prefer-destructuring
-                        val1 = queryRes.series[i].data[0].selectionData[0];
+                        val1 = series[i].data[0].selectionData[0];
                         break;
                     }
                 }
-                for (let i = 0; i < queryRes.series.length; i++) {
-                    if (queryRes.series[i].data[1].selectionData !== undefined) {
+                for (let i = 0; i < series.length; i++) {
+                    if (series[i].data[1].selectionData !== undefined) {
                         // eslint-disable-next-line prefer-destructuring
-                        val2 = queryRes.series[i].data[1].selectionData[0];
+                        val2 = series[i].data[1].selectionData[0];
                         break;
                     }
                 }
@@ -164,11 +179,11 @@ prism.run([
             }
 
             // Reverse the Catgory data + xAxis Category
-            for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
-                for (let j = 0; j < queryRes.series.length; j++) {
-                    queryRes.series[j].data[i] = series[j].data[queryRes.xAxis.categories.length - i - 1];
+            for (let i = 0; i < categories.length; i++) {
+                for (let j = 0; j < series.length; j++) {
+                    series[j].data[i] = origSeries[j].data[categories.length - i - 1];
                 }
-                queryRes.xAxis.categories[i] = categories[queryRes.xAxis.categories.length - i - 1];
+                categories[i] = origCategories[categories.length - i - 1];
             }
         };
 
@@ -176,16 +191,17 @@ prism.run([
         // Sort Categories by Asc/Desc based on the totals
         const executeSortCategoriesOption = (el, args, sortType) => {
             const columnTotals = []; // List to store total values
-            const { queryResult: queryRes } = args.widget;
-            const categories = $.extend(true, {}, queryRes.xAxis.categories); // Save initial categories
-            const series = $.extend(true, {}, queryRes.series); // Save initial series data results
+            const { series } = args.widget.queryResult;
+            const origSeries = $.extend(true, {}, series); // Save initial series data results
+            const { categories } = args.widget.queryResult.xAxis;
+            const origCategories = $.extend(true, {}, categories); // Save initial categories
 
             // Loop through the results and calculate the bar totals
-            for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
+            for (let i = 0; i < categories.length; i++) {
                 let total = 0;
-                for (let j = 0; j < queryRes.series.length; j++) {
-                    if (queryRes.series[j].data[i].y !== null) {
-                        total += queryRes.series[j].data[i].y;
+                for (let j = 0; j < series.length; j++) {
+                    if (series[j].data[i].y !== null) {
+                        total += series[j].data[i].y;
                     }
                 }
                 columnTotals.push(total);
@@ -200,32 +216,33 @@ prism.run([
             });
 
             // Update the series data/categories to reflect the sorted mapping
-            for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
-                for (let j = 0; j < queryRes.series.length; j++) {
-                    queryRes.series[j].data[i] = series[j].data[mapped[i].index];
+            for (let i = 0; i < categories.length; i++) {
+                for (let j = 0; j < series.length; j++) {
+                    series[j].data[i] = origSeries[j].data[mapped[i].index];
                 }
-                queryRes.xAxis.categories[i] = categories[mapped[i].index];
+                categories[i] = origCategories[mapped[i].index];
             }
         };
 
         // Sort the Categories based on the custom options selected in the popup
         const executeSortCategoryCustomOption = (el, args) => {
-            const { queryResult: queryRes } = args.widget;
-            const categories = $.extend(true, {}, queryRes.xAxis.categories); // Save initial categories
-            const series = $.extend(true, {}, queryRes.series); // Save initial series data results
+            const { series } = args.widget.queryResult;
+            const origSeries = $.extend(true, {}, series); // Save initial series data results
+            const { categories } = args.widget.queryResult.xAxis;
+            const origCategories = $.extend(true, {}, categories); // Save initial categories
             const customList = args.widget.custom.barcolumnchart.customCategoryConfiguration;
             if (customList === undefined || customList.length === 0) { return; }
 
             const sortCategoryOrder = [];
-            for (let a = 0; a < queryRes.xAxis.categories.length; a++) {
-                for (let b = 0; b < queryRes.series.length; b++) {
+            for (let a = 0; a < categories.length; a++) {
+                for (let b = 0; b < series.length; b++) {
                     let index;
-                    if (queryRes.series[b].data[a].selectionData !== undefined
-                        && queryRes.series[b].data[a].selectionData[0] !== undefined) {
-                        if (queryRes.series[b].data[a].selectionData[0] instanceof Date) {
-                            index = customList.indexOf(queryRes.series[b].data[a].selectionData[0].toISOString());
+                    if (series[b].data[a].selectionData !== undefined
+                        && series[b].data[a].selectionData[0] !== undefined) {
+                        if (series[b].data[a].selectionData[0] instanceof Date) {
+                            index = customList.indexOf(series[b].data[a].selectionData[0].toISOString());
                         } else {
-                            index = customList.indexOf(queryRes.series[b].data[a].selectionData[0].toString());
+                            index = customList.indexOf(series[b].data[a].selectionData[0].toString());
                         }
                         if (index === -1) { // Add values to the end of the list if they are not in the customList
                             index = 100 + a;
@@ -240,11 +257,11 @@ prism.run([
             mapped.sort((a, b) => a.value - b.value);
 
             // Update the series data/categories to reflect the sorted mapping
-            for (let i = 0; i < queryRes.xAxis.categories.length; i++) {
-                for (let j = 0; j < queryRes.series.length; j++) {
-                    queryRes.series[j].data[i] = series[j].data[mapped[i].index];
+            for (let i = 0; i < categories.length; i++) {
+                for (let j = 0; j < series.length; j++) {
+                    series[j].data[i] = origSeries[j].data[mapped[i].index];
                 }
-                queryRes.xAxis.categories[i] = categories[mapped[i].index];
+                categories[i] = origCategories[mapped[i].index];
             }
         };
 

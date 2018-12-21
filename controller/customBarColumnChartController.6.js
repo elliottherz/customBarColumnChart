@@ -2,22 +2,32 @@ mod.controller('customBarColumnChartController', [
     '$scope',
     ($scope) => {
         // Sets default values for Design menu or gets values from widget.custom
-        const { widget: widg } = $scope;
-        $scope.customMenuEnabled = $$get(widg, 'custom.barcolumnchart.customMenuEnabled') || false;
-        $scope.addTotalOption = $$get(widg, 'custom.barcolumnchart.addTotalOption') || 'No';
-        $scope.sortCategoriesOption = $$get(widg, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
-        $scope.sortBreakByOption = $$get(widg, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
-        $scope.customBreakbyConfiguration = $$get(widg, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
-        $scope.customCategoryConfiguration = $$get(widg, 'custom.barcolumnchart.customCategoryConfiguration') || [];
+        const { widget } = $scope;
+        $scope.customMenuEnabled = $$get(widget, 'custom.barcolumnchart.customMenuEnabled') || false;
+        $scope.addTotalOption = $$get(widget, 'custom.barcolumnchart.addTotalOption') || 'No';
+        $scope.sortCategoriesOption = $$get(widget, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
+        $scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
+        $scope.customBreakbyConfiguration = $$get(widget, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
+        $scope.customCategoryConfiguration = $$get(widget, 'custom.barcolumnchart.customCategoryConfiguration') || [];
 
         // Total point customizations
-        $scope.totalPointColor = $$get(widg, 'custom.barcolumnchart.totalPointColor') || 'black';
-        $scope.totalPointFontSize = $$get(widg, 'custom.barcolumnchart.totalPointFontSize') || '11px';
-        $scope.totalPointSize = $$get(widg, 'custom.barcolumnchart.totalPointSize') || '5';
-        $scope.totalPointFontFamily = $$get(widg, 'custom.barcolumnchart.totalPointFontFamily')
+        $scope.totalPointColor = $$get(widget, 'custom.barcolumnchart.totalPointColor') || 'black';
+        $scope.totalPointFontSize = $$get(widget, 'custom.barcolumnchart.totalPointFontSize') || '11px';
+        $scope.totalPointSize = $$get(widget, 'custom.barcolumnchart.totalPointSize') || '5';
+        $scope.totalPointFontFamily = $$get(widget, 'custom.barcolumnchart.totalPointFontFamily')
             || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
-        $scope.totalAsLine = $$get(widg, 'custom.barcolumnchart.totalAsLine') || false;
-        $scope.totalYAxisPercentSpacing = $$get(widg, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 5;
+        $scope.totalAsLine = $$get(widget, 'custom.barcolumnchart.totalAsLine') || false;
+        $scope.totalYAxisPercentSpacing = $$get(widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 6;
+
+        let defaultLabelPadding;
+        if (widget.subtype === 'bar/classic' || widget.subtype === 'column/stackedcolumn') {
+            defaultLabelPadding = 6;
+        } else if (widget.subtype === 'column/classic') {
+            defaultLabelPadding = 3;
+        } else {
+            defaultLabelPadding = undefined;
+        }
+        $scope.totalLabelPadding = $$get(widget, 'custom.barcolumnchart.totalLabelPadding') || defaultLabelPadding;
 
         const customModal = $('#custom-modal-overlay');
         const customModalHeaderTitle = $('#custom-modal-header-title');
@@ -122,7 +132,7 @@ mod.controller('customBarColumnChartController', [
                 breakByValues.push(items[i].textContent);
             }
             $scope.customBreakbyConfiguration = breakByValues;
-            $$set(widg, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
+            $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
             $scope.widget.redraw();
         };
 
@@ -138,7 +148,7 @@ mod.controller('customBarColumnChartController', [
                 categoryValues.push(items[i].textContent);
             }
             $scope.customCategoryConfiguration = categoryValues;
-            $$set(widg, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
+            $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
             $scope.widget.redraw();
         };
 
@@ -146,14 +156,14 @@ mod.controller('customBarColumnChartController', [
         // ----------------------------------Returns the Categories of the widget---------------------------------------
         const getCategoryNames = () => {
             const categoryNames = [];
-            for (let a = 0; a < widg.queryResult.xAxis.categories.length; a++) {
-                for (let b = 0; b < widg.queryResult.series.length; b++) {
-                    if (widg.queryResult.series[b].data[a].selectionData !== undefined
-                        && widg.queryResult.series[b].data[a].selectionData[0] !== undefined) {
-                        if (prism.$ngscope.widget.queryResult.series[b].data[a].selectionData[0] instanceof Date) {
-                            categoryNames.push(widg.queryResult.series[b].data[a].selectionData[0].toISOString());
+            for (let a = 0; a < widget.queryResult.xAxis.categories.length; a++) {
+                for (let b = 0; b < widget.queryResult.series.length; b++) {
+                    if (widget.queryResult.series[b].data[a].selectionData !== undefined
+                        && widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
+                        if (widget.queryResult.series[b].data[a].selectionData[0] instanceof Date) {
+                            categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toISOString());
                         } else {
-                            categoryNames.push(widg.queryResult.series[b].data[a].selectionData[0].toString());
+                            categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toString());
                         }
                         break;
                     }
@@ -166,20 +176,20 @@ mod.controller('customBarColumnChartController', [
         // -----------------------------------Returns the BreakBy of the widget-----------------------------------------
         const getBreakbyNames = () => {
             const seriesNames = []; // Gets current order of the BreakBy
-            for (let i = 0; i < widg.queryResult.series.length; i++) {
-                if (widg.queryResult.series[i].sortData instanceof Date) {
-                    seriesNames.push(widg.queryResult.series[i].sortData.toISOString());
-                } else if (!widg.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
+            for (let i = 0; i < widget.queryResult.series.length; i++) {
+                if (widget.queryResult.series[i].sortData instanceof Date) {
+                    seriesNames.push(widget.queryResult.series[i].sortData.toISOString());
+                } else if (!widget.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
                     // If series is a Date Field, then store values in ISO
-                    const match1 = widg.queryResult.series[i].sortData
-                        .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}');
-                    const match2 = widg.queryResult.series[i].sortData
-                        .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}');
+                    const match1 = widget.queryResult.series[i].sortData
+                        .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'); // 2018-12-19T00:00:00
+                    const match2 = widget.queryResult.series[i].sortData
+                        .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}'); // Dec 19 2018 00:00:00
 
                     if (match1 !== null) { // Date is already in ISO format
-                        seriesNames.push(widg.queryResult.series[i].sortData.substring(match1.index));
+                        seriesNames.push(widget.queryResult.series[i].sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = widg.queryResult.series[i].sortData
+                        const matchRes = widget.queryResult.series[i].sortData
                             .substring(match2.index).substring(0, 20);
                         let strMonthNum;
                         switch (matchRes.substring(0, 3)) {
@@ -226,7 +236,7 @@ mod.controller('customBarColumnChartController', [
                         seriesNames.push(`${matchRes.substring(7, 11)}-${strMonthNum}-${matchRes.substring(4, 6)}`
                             + `T${matchRes.substring(12)}`);
                     } else { // Non-Date Field
-                        seriesNames.push(widg.queryResult.series[i].name);
+                        seriesNames.push(widget.queryResult.series[i].name);
                     }
                 }
             }
@@ -272,14 +282,14 @@ mod.controller('customBarColumnChartController', [
             // Default to the current order of the breakby.
             if ($scope.customCategoryConfiguration === undefined || $scope.customCategoryConfiguration.length === 0) {
                 $scope.customCategoryConfiguration = categoryNames;
-                $$set(widg, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
+                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
             } else { // If there are new values in the category, then add them to the end of the configuration
                 for (let j = 0; j < categoryNames.length; j++) {
                     if (!$scope.customCategoryConfiguration.includes(categoryNames[j])) {
                         $scope.customCategoryConfiguration.push(categoryNames[j]);
                     }
                 }
-                $$set(widg, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
+                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
             }
 
             customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
@@ -305,14 +315,14 @@ mod.controller('customBarColumnChartController', [
             // Default to the current order of the breakby.
             if ($scope.customBreakbyConfiguration === undefined || $scope.customBreakbyConfiguration.length === 0) {
                 $scope.customBreakbyConfiguration = breakbyNames;
-                $$set(widg, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
+                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
             } else { // If there are new values in the breakby, then add them to the end of the configuration
                 for (let j = 0; j < breakbyNames.length; j++) {
                     if (!$scope.customBreakbyConfiguration.includes(breakbyNames[j])) {
                         $scope.customBreakbyConfiguration.push(breakbyNames[j]);
                     }
                 }
-                $$set(widg, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
+                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
             }
 
             customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
@@ -359,23 +369,23 @@ mod.controller('customBarColumnChartController', [
         // -----------------------------------Watch when the widget type changes----------------------------------------
         $scope.$watch('widget', () => {
             $scope.type = $$get($scope, 'widget.type');
-            $$set(widg, 'custom.barcolumnchart.type', $scope.type);
+            $$set(widget, 'custom.barcolumnchart.type', $scope.type);
             $scope.isTypeValid = $scope.type === 'chart/bar' || $scope.type === 'chart/column';
-            $$set(widg, 'custom.barcolumnchart.isTypeValid', $scope.isTypeValid);
+            $$set(widget, 'custom.barcolumnchart.isTypeValid', $scope.isTypeValid);
         });
 
 
         // ---------------------------------Triggers on customMenuEnabled changed---------------------------------------
         $scope.enabledChanged = () => {
             $scope.customMenuEnabled = !$scope.customMenuEnabled;
-            $$set(widg, 'custom.barcolumnchart.customMenuEnabled', $scope.customMenuEnabled);
+            $$set(widget, 'custom.barcolumnchart.customMenuEnabled', $scope.customMenuEnabled);
             $scope.widget.redraw();
         };
 
 
         // -----------------------------Triggers on showTotals radio selection changed----------------------------------
         $scope.changeAddTotal = (addTotal) => {
-            $$set(widg, 'custom.barcolumnchart.addTotalOption', addTotal);
+            $$set(widget, 'custom.barcolumnchart.addTotalOption', addTotal);
             $scope.addTotalOption = addTotal;
             $scope.widget.redraw();
         };
@@ -383,7 +393,7 @@ mod.controller('customBarColumnChartController', [
 
         // ----------------------------Triggers on sortCategories radio selection changed-------------------------------
         $scope.changeSortCategories = (sortCategories) => {
-            $$set(widg, 'custom.barcolumnchart.sortCategoriesOption', sortCategories);
+            $$set(widget, 'custom.barcolumnchart.sortCategoriesOption', sortCategories);
             $scope.sortCategoriesOption = sortCategories;
             $scope.widget.redraw();
         };
@@ -391,7 +401,7 @@ mod.controller('customBarColumnChartController', [
 
         // -------------------------------Triggers on sortBreakBy radio selection changed-------------------------------
         $scope.changeSortBreakBy = (sortBreakBy) => {
-            $$set(widg, 'custom.barcolumnchart.sortBreakByOption', sortBreakBy);
+            $$set(widget, 'custom.barcolumnchart.sortBreakByOption', sortBreakBy);
             $scope.sortBreakByOption = sortBreakBy;
             $scope.widget.redraw();
         };
