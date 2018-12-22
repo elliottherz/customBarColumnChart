@@ -42,6 +42,13 @@ mod.controller('customBarColumnChartController', [
         const defaultTotalSortValue = 'zzzzzzTotal';
 
 
+        const getPopupItemList = () => {
+            const itemList = [];
+            $('.custom-modal-body-list-item').each((index, item) => itemList.push(item.textContent));
+            return itemList;
+        };
+
+
         // -------------------------------------------------------------------------------------------------------------
         // Functions used for drag and dropping elements within the modal popup
         // Can't use ES6 syntax due to differently scoped reference to this
@@ -116,6 +123,13 @@ mod.controller('customBarColumnChartController', [
                 } else {
                     $(this).after(item[0]);
                 }
+                const listItems = getPopupItemList();
+                if (lastModalOpened === 'Category') {
+                    $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
+                } else {
+                    $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
+                }
+                $scope.widget.redraw();
             }
             return false;
         }
@@ -125,14 +139,10 @@ mod.controller('customBarColumnChartController', [
         const saveCustomBreakBy = () => {
             $(customModal).css('display', 'none');
             $('.trillapser-container').css('display', 'block');
-
-            const items = $('.custom-modal-body-list-item');
-            const breakByValues = [];
-            for (let i = 0; i < items.length; i++) {
-                breakByValues.push(items[i].textContent);
-            }
+            const breakByValues = getPopupItemList();
             $scope.customBreakbyConfiguration = breakByValues;
             $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
+            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
             $scope.widget.redraw();
         };
 
@@ -141,14 +151,10 @@ mod.controller('customBarColumnChartController', [
         const saveCustomCateogry = () => {
             $(customModal).css('display', 'none');
             $('.trillapser-container').css('display', 'block');
-
-            const items = $('.custom-modal-body-list-item');
-            const categoryValues = [];
-            for (let i = 0; i < items.length; i++) {
-                categoryValues.push(items[i].textContent);
-            }
+            const categoryValues = getPopupItemList();
             $scope.customCategoryConfiguration = categoryValues;
             $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
+            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
             $scope.widget.redraw();
         };
 
@@ -179,7 +185,8 @@ mod.controller('customBarColumnChartController', [
             for (let i = 0; i < widget.queryResult.series.length; i++) {
                 if (widget.queryResult.series[i].sortData instanceof Date) {
                     seriesNames.push(widget.queryResult.series[i].sortData.toISOString());
-                } else if (!widget.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
+                } else if (widget.queryResult.series[i].sortData !== undefined
+                    && !widget.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
                     // If series is a Date Field, then store values in ISO
                     const match1 = widget.queryResult.series[i].sortData
                         .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'); // 2018-12-19T00:00:00
@@ -244,38 +251,12 @@ mod.controller('customBarColumnChartController', [
         };
 
 
-        // -----------------------------------------Reset Button Clicked------------------------------------------------
-        customResetButton.click(() => {
-            if (lastModalOpened === 'Category') {
-                const categoryNames = getCategoryNames().sort();
-                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-                for (let k = 0; k < categoryNames.length; k++) {
-                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                        .text(categoryNames[k]);
-                    customModalBodyList.append(item);
-                }
-                const cols = document.querySelectorAll('.custom-modal-body-list-item');
-                [].forEach.call(cols, addDnDHandlers);
-            } else if (lastModalOpened === 'BreakBy') {
-                const breakbyNames = getBreakbyNames().sort();
-                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-                for (let k = 0; k < breakbyNames.length; k++) {
-                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                        .text(breakbyNames[k]);
-                    customModalBodyList.append(item);
-                }
-                const cols = document.querySelectorAll('.custom-modal-body-list-item');
-                [].forEach.call(cols, addDnDHandlers);
-            }
-        });
-
-
         // --------------------------------------Custom Category Button Clicked-----------------------------------------
         customCategoryBtn.click(() => {
             lastModalOpened = 'Category';
             $(customModal).css('display', 'block');
             $('.trillapser-container').css('display', 'none');
-            $(customModalHeaderTitle).text('Custom Category Sort - Configuration Page');
+            $(customModalHeaderTitle).text('Custom Category');
             const categoryNames = getCategoryNames();
 
             // If first time clicking the button, then no configuration has been specified.
@@ -300,6 +281,8 @@ mod.controller('customBarColumnChartController', [
             }
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
             [].forEach.call(cols, addDnDHandlers);
+            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', getPopupItemList());
+            $scope.widget.redraw();
         });
 
 
@@ -308,7 +291,7 @@ mod.controller('customBarColumnChartController', [
             lastModalOpened = 'BreakBy';
             $(customModal).css('display', 'block');
             $('.trillapser-container').css('display', 'none');
-            $(customModalHeaderTitle).text('Custom Break By Sort - Configuration Page');
+            $(customModalHeaderTitle).text('Custom Break By');
             const breakbyNames = getBreakbyNames();
 
             // If first time clicking the button, then no configuration has been specified.
@@ -333,24 +316,8 @@ mod.controller('customBarColumnChartController', [
             }
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
             [].forEach.call(cols, addDnDHandlers);
-        });
-
-
-        // ---------------------------------------Cancel Button Clicked-------------------------------------------------
-        customCancelButton.click(() => {
-            $(customModal).css('display', 'none');
-            $('.trillapser-container').css('display', 'block');
+            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', getPopupItemList());
             $scope.widget.redraw();
-        });
-
-
-        // -------------------------------------Save Config Button Clicked----------------------------------------------
-        customSaveButton.click(() => {
-            if (lastModalOpened === 'Category') {
-                saveCustomCateogry();
-            } else if (lastModalOpened === 'BreakBy') {
-                saveCustomBreakBy();
-            }
         });
 
 
@@ -364,6 +331,56 @@ mod.controller('customBarColumnChartController', [
                 }
             }
         };
+
+
+        // -------------------------------------Save Config Button Clicked----------------------------------------------
+        customSaveButton.click(() => {
+            if (lastModalOpened === 'Category') {
+                saveCustomCateogry();
+            } else if (lastModalOpened === 'BreakBy') {
+                saveCustomBreakBy();
+            }
+        });
+
+
+        // ---------------------------------------Cancel Button Clicked-------------------------------------------------
+        customCancelButton.click(() => {
+            $(customModal).css('display', 'none');
+            $('.trillapser-container').css('display', 'block');
+            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
+            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
+            $scope.widget.redraw();
+        });
+
+
+        // -----------------------------------------Reset Button Clicked------------------------------------------------
+        customResetButton.click(() => {
+            if (lastModalOpened === 'Category') {
+                const categoryNames = getCategoryNames().sort();
+                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
+                for (let k = 0; k < categoryNames.length; k++) {
+                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
+                        .text(categoryNames[k]);
+                    customModalBodyList.append(item);
+                }
+                const cols = document.querySelectorAll('.custom-modal-body-list-item');
+                [].forEach.call(cols, addDnDHandlers);
+                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', getPopupItemList());
+                $scope.widget.redraw();
+            } else if (lastModalOpened === 'BreakBy') {
+                const breakbyNames = getBreakbyNames().sort();
+                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
+                for (let k = 0; k < breakbyNames.length; k++) {
+                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
+                        .text(breakbyNames[k]);
+                    customModalBodyList.append(item);
+                }
+                const cols = document.querySelectorAll('.custom-modal-body-list-item');
+                [].forEach.call(cols, addDnDHandlers);
+                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', getPopupItemList());
+                $scope.widget.redraw();
+            }
+        });
 
 
         // -----------------------------------Watch when the widget type changes----------------------------------------

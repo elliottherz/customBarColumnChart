@@ -230,7 +230,8 @@ prism.run([
             const origSeries = $.extend(true, {}, series); // Save initial series data results
             const { categories } = args.widget.queryResult.xAxis;
             const origCategories = $.extend(true, {}, categories); // Save initial categories
-            const customList = args.widget.custom.barcolumnchart.customCategoryConfiguration;
+            const customList = args.widget.custom.barcolumnchart.tempCategoryConfiguration
+                || args.widget.custom.barcolumnchart.customCategoryConfiguration;
             if (customList === undefined || customList.length === 0) { return; }
 
             const sortCategoryOrder = [];
@@ -271,43 +272,43 @@ prism.run([
         const executeSortBreakByReverseOption = (el, args) => {
             const delim = '|~|'; // Delimiter
             const sortDataValues = [];
-            const { queryResult: queryRes } = args.widget;
+            const { series } = args.widget.queryResult;
             // Sort the breakby sort values...for some reason they aren't always in order
-            for (let i = 0; i < queryRes.series.length; i++) {
-                if (queryRes.series[i].sortData === undefined) {
-                    sortDataValues.push(queryRes.series[i].name);
-                } else if (queryRes.series[i].sortData instanceof Date) { // Check if date to convert to ISO
-                    sortDataValues.push(queryRes.series[i].sortData.toISOString());
-                } else if (queryRes.series[i].sortData.lastIndexOf(delim) > 0) {
+            for (let i = 0; i < series.length; i++) {
+                if (series[i].sortData === undefined) {
+                    sortDataValues.push(series[i].name);
+                } else if (series[i].sortData instanceof Date) { // Check if date to convert to ISO
+                    sortDataValues.push(series[i].sortData.toISOString());
+                } else if (series[i].sortData.lastIndexOf(delim) > 0) {
                     // If string was already sorted in reverse, strip last reverse sort values
-                    sortDataValues.push(queryRes.series[i].sortData
-                        .substring(queryRes.series[i].sortData.lastIndexOf(delim) + 3));
+                    sortDataValues.push(series[i].sortData
+                        .substring(series[i].sortData.lastIndexOf(delim) + 3));
                 } else {
-                    sortDataValues.push(queryRes.series[i].sortData);
+                    sortDataValues.push(series[i].sortData);
                 }
             }
             sortDataValues.sort().reverse();
 
-            for (let k = 0; k < queryRes.series.length; k++) {
+            for (let k = 0; k < series.length; k++) {
                 let indexStr;
-                if (queryRes.series[k].sortData === undefined) {
-                    indexStr = sortDataValues.indexOf(queryRes.series[k].name).toString();
+                if (series[k].sortData === undefined) {
+                    indexStr = sortDataValues.indexOf(series[k].name).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].name}`;
-                } else if (queryRes.series[k].sortData instanceof Date) {
-                    indexStr = sortDataValues.indexOf(queryRes.series[k].sortData.toISOString()).toString();
+                    series[k].sortData = `${indexStr}${delim}${series[k].name}`;
+                } else if (series[k].sortData instanceof Date) {
+                    indexStr = sortDataValues.indexOf(series[k].sortData.toISOString()).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].sortData.toISOString()}`;
+                    series[k].sortData = `${indexStr}${delim}${series[k].sortData.toISOString()}`;
                 } else {
-                    indexStr = sortDataValues.indexOf(queryRes.series[k].sortData).toString();
+                    indexStr = sortDataValues.indexOf(series[k].sortData).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    queryRes.series[k].sortData = `${indexStr}${delim}${queryRes.series[k].sortData}`;
+                    series[k].sortData = `${indexStr}${delim}${series[k].sortData}`;
                 }
             }
         };
@@ -356,25 +357,26 @@ prism.run([
 
         // Sort the Break By based on the custom options selected in the popup
         const executeSortBreakByCustomOption = (el, args) => {
-            const { queryResult: queryRes } = args.widget;
-            const customList = args.widget.custom.barcolumnchart.customBreakbyConfiguration;
+            const { series } = args.widget.queryResult;
+            const customList = args.widget.custom.barcolumnchart.tempBreakbyConfiguration
+                || args.widget.custom.barcolumnchart.customBreakbyConfiguration;
             if (customList === undefined || customList.length === 0) { return; }
-            for (let i = 0; i < queryRes.series.length; i++) {
+            for (let i = 0; i < series.length; i++) {
                 let index;
 
-                if (queryRes.series[i].sortData instanceof Date) {
-                    index = customList.indexOf(queryRes.series[i].sortData.toISOString());
-                } else {
+                if (series[i].sortData instanceof Date) {
+                    index = customList.indexOf(series[i].sortData.toISOString());
+                } else if (series[i].sortData !== undefined) {
                     // If series is a Date Field, then store values in ISO
-                    const match1 = queryRes.series[i].sortData
+                    const match1 = series[i].sortData
                         .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}');
-                    const match2 = queryRes.series[i].sortData
+                    const match2 = series[i].sortData
                         .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}');
 
                     if (match1 !== null) { // Date is already in ISO format
-                        index = customList.indexOf(queryRes.series[i].sortData.substring(match1.index));
+                        index = customList.indexOf(series[i].sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = queryRes.series[i].sortData.substring(match2.index).substring(0, 20);
+                        const matchRes = series[i].sortData.substring(match2.index).substring(0, 20);
                         let strMonthNum;
                         switch (matchRes.substring(0, 3)) {
                             case 'Jan':
@@ -421,16 +423,18 @@ prism.run([
                             + `${matchRes.substring(4, 6)}T${matchRes.substring(12)}`;
                         index = customList.indexOf(isoFormatBreakby);
                     } else { // Non-Date Field
-                        index = customList.indexOf(queryRes.series[i].name);
+                        index = customList.indexOf(series[i].name);
                     }
+                } else { // Non-Date Field
+                    index = customList.indexOf(series[i].name);
                 }
 
                 if (index === -1) {
-                    queryRes.series[i].sortData = `zzz${queryRes.series[i].sortData}`;
+                    series[i].sortData = `zzz${series[i].sortData}`;
                 } else if (index < 10) {
-                    queryRes.series[i].sortData = `0${index}${queryRes.series[i].sortData}`;
+                    series[i].sortData = `0${index}${series[i].sortData}`;
                 } else {
-                    queryRes.series[i].sortData = index + queryRes.series[i].sortData;
+                    series[i].sortData = index + series[i].sortData;
                 }
             }
         };
@@ -450,12 +454,16 @@ prism.run([
             const addTotalOption = $$get(args.widget, 'custom.barcolumnchart.addTotalOption');
             const sortCategoriesOption = $$get(args.widget, 'custom.barcolumnchart.sortCategoriesOption');
             const sortBreakByOption = $$get(args.widget, 'custom.barcolumnchart.sortBreakByOption');
+            const tempCategoryConfiguration = $$get(args.widget, 'custom.barcolumnchart.tempCategoryConfiguration');
+            const tempBreakbyConfiguration = $$get(args.widget, 'custom.barcolumnchart.tempBreakbyConfiguration');
 
             // If the chart isn't valid or the option isn't enabled return
             if (!customMenuEnabled || !isTypeValid) { return; }
 
             // Sorting Category Options
-            if (sortCategoriesOption === 'Reverse') {
+            if (tempCategoryConfiguration !== undefined) { // Check if temp configuration is being used
+                executeSortCategoryCustomOption(el, args);
+            } else if (sortCategoriesOption === 'Reverse') {
                 executeSortCategoryReverseOption(el, args);
             } else if (sortCategoriesOption === 'Asc by Total') {
                 executeSortCategoriesOption(el, args, 'ASC');
@@ -466,7 +474,9 @@ prism.run([
             }
 
             // Sorting Break By Options
-            if (sortBreakByOption === 'Asc by Total') {
+            if (tempBreakbyConfiguration !== undefined) { // Check if temp configuration is being used
+                executeSortBreakByCustomOption(el, args);
+            } else if (sortBreakByOption === 'Asc by Total') {
                 executeSortBreakByTotalOption(el, args, 'ASC');
             } else if (sortBreakByOption === 'Desc by Total') {
                 executeSortBreakByTotalOption(el, args, 'DESC');
