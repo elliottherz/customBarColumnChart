@@ -40,7 +40,10 @@ prism.run([
                 let total = 0;
                 for (let j = 0; j < series.length; j++) {
                     try { // If the widget already has totals, don't add more totals
-                        if (series[j].sortData.includes(defaultTotalSortValue)) { return; }
+                        if (series[j].sortData !== undefined
+                            && series[j].sortData.includes(defaultTotalSortValue)) { return; }
+                        if (series[j].sortData === undefined
+                            && series[j].name === 'Total') { return; }
                     } catch (err) {
                         // Do nothing but catch the exception
                     }
@@ -189,7 +192,7 @@ prism.run([
 
 
         // Sort Categories by Asc/Desc based on the totals
-        const executeSortCategoriesOption = (el, args, sortType) => {
+        const executeSortCategoriesTotalOption = (el, args, sortType) => {
             const columnTotals = []; // List to store total values
             const { series } = args.widget.queryResult;
             const origSeries = $.extend(true, {}, series); // Save initial series data results
@@ -239,6 +242,7 @@ prism.run([
                 for (let b = 0; b < series.length; b++) {
                     let index;
                     if (series[b].data[a].selectionData !== undefined
+                        && series[b].data[a].selectionData !== null
                         && series[b].data[a].selectionData[0] !== undefined) {
                         if (series[b].data[a].selectionData[0] instanceof Date) {
                             index = customList.indexOf(series[b].data[a].selectionData[0].toISOString());
@@ -460,30 +464,38 @@ prism.run([
             // If the chart isn't valid or the option isn't enabled return
             if (!customMenuEnabled || !isTypeValid) { return; }
 
-            // Sorting Category Options
-            if (tempCategoryConfiguration !== undefined) { // Check if temp configuration is being used
-                executeSortCategoryCustomOption(el, args);
-            } else if (sortCategoriesOption === 'Reverse') {
-                executeSortCategoryReverseOption(el, args);
-            } else if (sortCategoriesOption === 'Asc by Total') {
-                executeSortCategoriesOption(el, args, 'ASC');
-            } else if (sortCategoriesOption === 'Desc by Total') {
-                executeSortCategoriesOption(el, args, 'DESC');
-            } else if (sortCategoriesOption === 'Custom') {
-                executeSortCategoryCustomOption(el, args);
+            try {
+                // Sorting Category Options
+                if (tempCategoryConfiguration !== undefined) { // Check if temp configuration is being used
+                    executeSortCategoryCustomOption(el, args);
+                } else if (sortCategoriesOption === 'Reverse') {
+                    executeSortCategoryReverseOption(el, args);
+                } else if (sortCategoriesOption === 'Asc by Total') {
+                    executeSortCategoriesTotalOption(el, args, 'ASC');
+                } else if (sortCategoriesOption === 'Desc by Total') {
+                    executeSortCategoriesTotalOption(el, args, 'DESC');
+                } else if (sortCategoriesOption === 'Custom') {
+                    executeSortCategoryCustomOption(el, args);
+                }
+            } catch (err) {
+                // Do Nothing
             }
 
-            // Sorting Break By Options
-            if (tempBreakbyConfiguration !== undefined) { // Check if temp configuration is being used
-                executeSortBreakByCustomOption(el, args);
-            } else if (sortBreakByOption === 'Asc by Total') {
-                executeSortBreakByTotalOption(el, args, 'ASC');
-            } else if (sortBreakByOption === 'Desc by Total') {
-                executeSortBreakByTotalOption(el, args, 'DESC');
-            } else if (sortBreakByOption === 'Reverse') {
-                executeSortBreakByReverseOption(el, args);
-            } else if (sortBreakByOption === 'Custom') {
-                executeSortBreakByCustomOption(el, args);
+            try {
+                // Sorting Break By Options
+                if (tempBreakbyConfiguration !== undefined) { // Check if temp configuration is being used
+                    executeSortBreakByCustomOption(el, args);
+                } else if (sortBreakByOption === 'Asc by Total') {
+                    executeSortBreakByTotalOption(el, args, 'ASC');
+                } else if (sortBreakByOption === 'Desc by Total') {
+                    executeSortBreakByTotalOption(el, args, 'DESC');
+                } else if (sortBreakByOption === 'Reverse') {
+                    executeSortBreakByReverseOption(el, args);
+                } else if (sortBreakByOption === 'Custom') {
+                    executeSortBreakByCustomOption(el, args);
+                }
+            } catch (err) {
+                // Do Nothing
             }
 
             // Show Total Options

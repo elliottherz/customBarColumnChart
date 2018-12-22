@@ -51,8 +51,7 @@ mod.controller('customBarColumnChartController', [
 
         // -------------------------------------------------------------------------------------------------------------
         // Functions used for drag and dropping elements within the modal popup
-        // Can't use ES6 syntax due to differently scoped reference to this
-        function findLargerModalItemIndex(elem1, elem2) {
+        const findLargerModalItemIndex = (elem1, elem2) => {
             let index1 = -1;
             let index2 = 0;
             for (let i = 0; i < elem1.parentNode.childNodes.length; i++) {
@@ -64,40 +63,54 @@ mod.controller('customBarColumnChartController', [
                 }
             }
             return index1 > index2;
-        }
+        };
 
-        function handleDragStart(e) {
-            this.style.opacity = '0.4';
-            dragSrcEl = this;
+        const handleDragStart = (e) => {
+            e.target.style.opacity = '0.4';
+            dragSrcEl = e.target;
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
-        }
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        };
 
-        function handleDragOver(e) {
+        const handleDragOver = (e) => {
             if (e.preventDefault) {
                 e.preventDefault(); // Necessary. Allows us to drop.
             }
             e.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
             return false;
-        }
+        };
 
-        function handleDragEnter() {
-            this.classList.add('active'); // This / e.target is the current hover target.
-        }
+        const handleDragEnter = (e) => {
+            const listItems = getPopupItemList();
+            const index1 = listItems.indexOf(dragSrcEl.textContent);
+            const index2 = listItems.indexOf(e.target.textContent);
+            if (index1 !== index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2, 0, dragSrcEl.textContent);
+            }
 
-        function handleDragLeave() {
-            this.classList.remove('active'); // This / e.target is previous target element.
-        }
+            if (lastModalOpened === 'Category') {
+                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
+            } else {
+                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
+            }
+            $scope.widget.redraw();
+            e.target.classList.add('active');
+        };
 
-        function handleDragEnd() {
+        const handleDragLeave = (e) => {
+            e.target.classList.remove('active');
+        };
+
+        const handleDragEnd = () => {
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
             [].forEach.call(cols, (col) => {
                 col.classList.remove('active');
                 col.style.opacity = '1';
             });
-        }
+        };
 
-        function addDnDHandlers(e) {
+        const addDnDHandlers = (e) => {
             e.addEventListener('dragstart', handleDragStart, false);
             e.addEventListener('dragenter', handleDragEnter, false);
             e.addEventListener('dragover', handleDragOver, false);
@@ -105,23 +118,23 @@ mod.controller('customBarColumnChartController', [
             // eslint-disable-next-line no-use-before-define
             e.addEventListener('drop', handleDrop, false);
             e.addEventListener('dragend', handleDragEnd, false);
-        }
+        };
 
-        function handleDrop(e) {
+        const handleDrop = (e) => {
             if (e.stopPropagation) {
                 e.stopPropagation(); // Stops some browsers from redirecting.
             }
-            if (dragSrcEl !== this) { // Don't do anything if dropping the same column we're dragging.
+            if (dragSrcEl !== e.target) { // Don't do anything if dropping the same column we're dragging.
                 // Need to figure out if element is above or below other element.
-                const placeItemBefore = findLargerModalItemIndex(dragSrcEl, this);
-                this.parentNode.removeChild(dragSrcEl);
+                const placeItemBefore = findLargerModalItemIndex(dragSrcEl, e.target);
+                e.target.parentNode.removeChild(dragSrcEl);
                 const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
                     .text(dragSrcEl.textContent);
                 addDnDHandlers(item[0]);
                 if (placeItemBefore) {
-                    $(this).before(item[0]);
+                    $(e.target).before(item[0]);
                 } else {
-                    $(this).after(item[0]);
+                    $(e.target).after(item[0]);
                 }
                 const listItems = getPopupItemList();
                 if (lastModalOpened === 'Category') {
@@ -132,7 +145,7 @@ mod.controller('customBarColumnChartController', [
                 $scope.widget.redraw();
             }
             return false;
-        }
+        };
 
 
         // -------------------------------Saves the Custom Breakby Settings---------------------------------------------
@@ -162,16 +175,22 @@ mod.controller('customBarColumnChartController', [
         // ----------------------------------Returns the Categories of the widget---------------------------------------
         const getCategoryNames = () => {
             const categoryNames = [];
-            for (let a = 0; a < widget.queryResult.xAxis.categories.length; a++) {
-                for (let b = 0; b < widget.queryResult.series.length; b++) {
-                    if (widget.queryResult.series[b].data[a].selectionData !== undefined
-                        && widget.queryResult.series[b].data[a].selectionData[0] !== undefined) {
-                        if (widget.queryResult.series[b].data[a].selectionData[0] instanceof Date) {
-                            categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toISOString());
-                        } else {
-                            categoryNames.push(widget.queryResult.series[b].data[a].selectionData[0].toString());
+            const { categories } = $scope.widget.queryResult.xAxis;
+            const { series } = $scope.widget.queryResult;
+            for (let a = 0; a < categories.length; a++) {
+                for (let b = 0; b < series.length; b++) {
+                    try {
+                        if (series[b].data[a].selectionData !== undefined
+                            && series[b].data[a].selectionData[0] !== undefined) {
+                            if (series[b].data[a].selectionData[0] instanceof Date) {
+                                categoryNames.push(series[b].data[a].selectionData[0].toISOString());
+                            } else {
+                                categoryNames.push(series[b].data[a].selectionData[0].toString());
+                            }
+                            break;
                         }
-                        break;
+                    } catch (err) {
+                        // Do Nothing
                     }
                 }
             }
@@ -181,22 +200,24 @@ mod.controller('customBarColumnChartController', [
 
         // -----------------------------------Returns the BreakBy of the widget-----------------------------------------
         const getBreakbyNames = () => {
+            const { series } = $scope.widget.queryResult;
             const seriesNames = []; // Gets current order of the BreakBy
-            for (let i = 0; i < widget.queryResult.series.length; i++) {
-                if (widget.queryResult.series[i].sortData instanceof Date) {
-                    seriesNames.push(widget.queryResult.series[i].sortData.toISOString());
-                } else if (widget.queryResult.series[i].sortData !== undefined
-                    && !widget.queryResult.series[i].sortData.includes(defaultTotalSortValue)) {
+            for (let i = 0; i < series.length; i++) {
+                if (series[i].sortData instanceof Date) {
+                    seriesNames.push(series[i].sortData.toISOString());
+                } else if (series[i].sortData !== undefined
+                    && !Number.isNaN(series[i].sortData)
+                    && !series[i].sortData.includes(defaultTotalSortValue)) {
                     // If series is a Date Field, then store values in ISO
-                    const match1 = widget.queryResult.series[i].sortData
+                    const match1 = series[i].sortData
                         .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'); // 2018-12-19T00:00:00
-                    const match2 = widget.queryResult.series[i].sortData
+                    const match2 = series[i].sortData
                         .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}'); // Dec 19 2018 00:00:00
 
                     if (match1 !== null) { // Date is already in ISO format
-                        seriesNames.push(widget.queryResult.series[i].sortData.substring(match1.index));
+                        seriesNames.push(series[i].sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = widget.queryResult.series[i].sortData
+                        const matchRes = series[i].sortData
                             .substring(match2.index).substring(0, 20);
                         let strMonthNum;
                         switch (matchRes.substring(0, 3)) {
@@ -243,8 +264,10 @@ mod.controller('customBarColumnChartController', [
                         seriesNames.push(`${matchRes.substring(7, 11)}-${strMonthNum}-${matchRes.substring(4, 6)}`
                             + `T${matchRes.substring(12)}`);
                     } else { // Non-Date Field
-                        seriesNames.push(widget.queryResult.series[i].name);
+                        seriesNames.push(series[i].name);
                     }
+                } else if (series[i].name !== 'Total') { // No sort data populated
+                    seriesNames.push(series[i].name);
                 }
             }
             return seriesNames;
