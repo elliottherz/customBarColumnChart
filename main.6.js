@@ -164,19 +164,16 @@ prism.run([
                 let val2;
                 for (let i = 0; i < series.length; i++) {
                     if (series[i].data[0].selectionData !== undefined) {
-                        // eslint-disable-next-line prefer-destructuring
-                        val1 = series[i].data[0].selectionData[0];
-                        break;
+                        ({ 0: val1 } = series[i].data[0].selectionData);
                     }
-                }
-                for (let i = 0; i < series.length; i++) {
                     if (series[i].data[1].selectionData !== undefined) {
-                        // eslint-disable-next-line prefer-destructuring
-                        val2 = series[i].data[1].selectionData[0];
+                        ({ 0: val2 } = series[i].data[1].selectionData);
+                    }
+                    if (val1 !== undefined && val2 !== undefined) {
                         break;
                     }
                 }
-                if (val1 > val2) { return; }
+                if (val1 > val2) { return; } // Chart is already reversed, so return
             } catch (err) {
                 // Pass
             }
@@ -250,14 +247,13 @@ prism.run([
                             index = customList.indexOf(series[b].data[a].selectionData[0].toString());
                         }
                         if (index === -1) { // Add values to the end of the list if they are not in the customList
-                            index = 100 + a;
+                            index = categories.length + a;
                         }
                         sortCategoryOrder.push(index);
                         break;
                     }
                 }
             }
-
             const mapped = sortCategoryOrder.map((val, ind) => ({ index: ind, value: val }));
             mapped.sort((a, b) => a.value - b.value);
 

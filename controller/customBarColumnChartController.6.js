@@ -40,13 +40,7 @@ mod.controller('customBarColumnChartController', [
         let dragSrcEl = null;
         let lastModalOpened = null;
         const defaultTotalSortValue = 'zzzzzzTotal';
-
-
-        const getPopupItemList = () => {
-            const itemList = [];
-            $('.custom-modal-body-list-item').each((index, item) => itemList.push(item.textContent));
-            return itemList;
-        };
+        let listItems = null;
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -54,36 +48,36 @@ mod.controller('customBarColumnChartController', [
         const findLargerModalItemIndex = (elem1, elem2) => {
             let index1 = -1;
             let index2 = 0;
-            for (let i = 0; i < elem1.parentNode.childNodes.length; i++) {
-                if (elem1.textContent === elem1.parentNode.childNodes[i].textContent) {
-                    index1 = i;
+            elem1.parentNode.childNodes.forEach((elem, index) => {
+                if (elem1.textContent === elem.textContent) {
+                    index1 = index;
                 }
-                if (elem2.textContent === elem1.parentNode.childNodes[i].textContent) {
-                    index2 = i;
+                if (elem2.textContent === elem.textContent) {
+                    index2 = index;
                 }
-            }
+            });
             return index1 > index2;
         };
 
-        const handleDragStart = (e) => {
-            e.target.style.opacity = '0.4';
-            dragSrcEl = e.target;
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        const handleDragStart = (elem) => {
+            elem.target.style.opacity = '0.4';
+            dragSrcEl = elem.target;
+            elem.dataTransfer.effectAllowed = 'move';
+            elem.dataTransfer.setData('text/html', elem.target.innerHTML);
         };
 
-        const handleDragOver = (e) => {
-            if (e.preventDefault) {
-                e.preventDefault(); // Necessary. Allows us to drop.
+        const handleDragOver = (elem) => {
+            if (elem.preventDefault) {
+                elem.preventDefault(); // Necessary. Allows us to drop.
             }
-            e.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
+            elem.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
             return false;
         };
 
-        const handleDragEnter = (e) => {
-            const listItems = getPopupItemList();
+        const handleDragEnter = (elem) => {
+            elem.target.classList.add('active');
             const index1 = listItems.indexOf(dragSrcEl.textContent);
-            const index2 = listItems.indexOf(e.target.textContent);
+            const index2 = listItems.indexOf(elem.target.textContent);
             if (index1 !== index2) {
                 listItems.splice(index1, 1);
                 listItems.splice(index2, 0, dragSrcEl.textContent);
@@ -95,11 +89,10 @@ mod.controller('customBarColumnChartController', [
                 $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
             }
             $scope.widget.redraw();
-            e.target.classList.add('active');
         };
 
-        const handleDragLeave = (e) => {
-            e.target.classList.remove('active');
+        const handleDragLeave = (elem) => {
+            elem.target.classList.remove('active');
         };
 
         const handleDragEnd = () => {
@@ -110,33 +103,33 @@ mod.controller('customBarColumnChartController', [
             });
         };
 
-        const addDnDHandlers = (e) => {
-            e.addEventListener('dragstart', handleDragStart, false);
-            e.addEventListener('dragenter', handleDragEnter, false);
-            e.addEventListener('dragover', handleDragOver, false);
-            e.addEventListener('dragleave', handleDragLeave, false);
+        const addDnDHandlers = (elem) => {
+            elem.addEventListener('dragstart', handleDragStart, false);
+            elem.addEventListener('dragenter', handleDragEnter, false);
+            elem.addEventListener('dragover', handleDragOver, false);
+            elem.addEventListener('dragleave', handleDragLeave, false);
             // eslint-disable-next-line no-use-before-define
-            e.addEventListener('drop', handleDrop, false);
-            e.addEventListener('dragend', handleDragEnd, false);
+            elem.addEventListener('drop', handleDrop, false);
+            elem.addEventListener('dragend', handleDragEnd, false);
         };
 
-        const handleDrop = (e) => {
-            if (e.stopPropagation) {
-                e.stopPropagation(); // Stops some browsers from redirecting.
+        const handleDrop = (elem) => {
+            if (elem.stopPropagation) {
+                elem.stopPropagation(); // Stops some browsers from redirecting.
             }
-            if (dragSrcEl !== e.target) { // Don't do anything if dropping the same column we're dragging.
+            if (dragSrcEl !== elem.target) { // Don't do anything if dropping the same column we're dragging.
                 // Need to figure out if element is above or below other element.
-                const placeItemBefore = findLargerModalItemIndex(dragSrcEl, e.target);
-                e.target.parentNode.removeChild(dragSrcEl);
+                const placeItemBefore = findLargerModalItemIndex(dragSrcEl, elem.target);
+                elem.target.parentNode.removeChild(dragSrcEl);
                 const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
                     .text(dragSrcEl.textContent);
                 addDnDHandlers(item[0]);
                 if (placeItemBefore) {
-                    $(e.target).before(item[0]);
+                    $(elem.target).before(item[0]);
                 } else {
-                    $(e.target).after(item[0]);
+                    $(elem.target).after(item[0]);
                 }
-                const listItems = getPopupItemList();
+
                 if (lastModalOpened === 'Category') {
                     $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
                 } else {
@@ -145,30 +138,6 @@ mod.controller('customBarColumnChartController', [
                 $scope.widget.redraw();
             }
             return false;
-        };
-
-
-        // -------------------------------Saves the Custom Breakby Settings---------------------------------------------
-        const saveCustomBreakBy = () => {
-            $(customModal).css('display', 'none');
-            $('.trillapser-container').css('display', 'block');
-            const breakByValues = getPopupItemList();
-            $scope.customBreakbyConfiguration = breakByValues;
-            $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
-            $scope.widget.redraw();
-        };
-
-
-        // ---------------------------------Saves the Custom Category Settings------------------------------------------
-        const saveCustomCateogry = () => {
-            $(customModal).css('display', 'none');
-            $('.trillapser-container').css('display', 'block');
-            const categoryValues = getPopupItemList();
-            $scope.customCategoryConfiguration = categoryValues;
-            $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
-            $scope.widget.redraw();
         };
 
 
@@ -274,6 +243,75 @@ mod.controller('customBarColumnChartController', [
         };
 
 
+        // ------------------------------Saves the Custom Category/Breakby Settings-------------------------------------
+        const saveCustomSort = () => {
+            $(customModal).css('display', 'none');
+            $('.trillapser-container').css('display', 'block');
+            if (lastModalOpened === 'Category') {
+                $scope.customCategoryConfiguration = listItems;
+                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
+                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
+            } else if (lastModalOpened === 'BreakBy') {
+                $scope.customBreakbyConfiguration = listItems;
+                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
+                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
+            }
+            listItems = null;
+            $scope.widget.redraw();
+        };
+
+
+        // ------------------------------Modal Popup is closed by clicking off the side---------------------------------
+        window.onclick = (event) => { // When the user clicks anywhere outside of the modal, close it
+            if (event.target === customModal[0]) {
+                saveCustomSort();
+            }
+        };
+
+
+        // -------------------------------------Save Config Button Clicked----------------------------------------------
+        customSaveButton.click(() => {
+            saveCustomSort();
+        });
+
+
+        // ---------------------------------------Cancel Button Clicked-------------------------------------------------
+        customCancelButton.click(() => {
+            $(customModal).css('display', 'none');
+            $('.trillapser-container').css('display', 'block');
+            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
+            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
+            listItems = null;
+            $scope.widget.redraw();
+        });
+
+
+        // ------------------------------------------Reset Modal Popup--------------------------------------------------
+        const resetModalPopup = (popupList) => {
+            customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
+            popupList.forEach((value) => {
+                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
+                    .text(value);
+                customModalBodyList.append(item);
+            });
+            const cols = document.querySelectorAll('.custom-modal-body-list-item');
+            [].forEach.call(cols, addDnDHandlers);
+            listItems = popupList;
+        };
+
+        // -----------------------------------------Reset Button Clicked------------------------------------------------
+        customResetButton.click(() => {
+            if (lastModalOpened === 'Category') {
+                resetModalPopup(getCategoryNames().sort());
+                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
+            } else if (lastModalOpened === 'BreakBy') {
+                resetModalPopup(getBreakbyNames().sort());
+                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
+            }
+            $scope.widget.redraw();
+        });
+
+
         // --------------------------------------Custom Category Button Clicked-----------------------------------------
         customCategoryBtn.click(() => {
             lastModalOpened = 'Category';
@@ -288,23 +326,16 @@ mod.controller('customBarColumnChartController', [
                 $scope.customCategoryConfiguration = categoryNames;
                 $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
             } else { // If there are new values in the category, then add them to the end of the configuration
-                for (let j = 0; j < categoryNames.length; j++) {
-                    if (!$scope.customCategoryConfiguration.includes(categoryNames[j])) {
-                        $scope.customCategoryConfiguration.push(categoryNames[j]);
+                categoryNames.forEach((categoryName) => {
+                    if (!$scope.customCategoryConfiguration.includes(categoryName)) {
+                        $scope.customCategoryConfiguration.push(categoryName);
                     }
-                }
+                });
                 $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
             }
 
-            customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-            for (let k = 0; k < $scope.customCategoryConfiguration.length; k++) {
-                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                    .text($scope.customCategoryConfiguration[k]);
-                customModalBodyList.append(item);
-            }
-            const cols = document.querySelectorAll('.custom-modal-body-list-item');
-            [].forEach.call(cols, addDnDHandlers);
-            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', getPopupItemList());
+            resetModalPopup($scope.customCategoryConfiguration);
+            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
             $scope.widget.redraw();
         });
 
@@ -323,86 +354,17 @@ mod.controller('customBarColumnChartController', [
                 $scope.customBreakbyConfiguration = breakbyNames;
                 $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
             } else { // If there are new values in the breakby, then add them to the end of the configuration
-                for (let j = 0; j < breakbyNames.length; j++) {
-                    if (!$scope.customBreakbyConfiguration.includes(breakbyNames[j])) {
-                        $scope.customBreakbyConfiguration.push(breakbyNames[j]);
+                breakbyNames.forEach((breakbyName) => {
+                    if (!$scope.customBreakbyConfiguration.includes(breakbyName)) {
+                        $scope.customBreakbyConfiguration.push(breakbyName);
                     }
-                }
+                });
                 $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
             }
 
-            customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-            for (let k = 0; k < $scope.customBreakbyConfiguration.length; k++) {
-                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                    .text($scope.customBreakbyConfiguration[k]);
-                customModalBodyList.append(item);
-            }
-            const cols = document.querySelectorAll('.custom-modal-body-list-item');
-            [].forEach.call(cols, addDnDHandlers);
-            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', getPopupItemList());
+            resetModalPopup($scope.customBreakbyConfiguration);
+            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
             $scope.widget.redraw();
-        });
-
-
-        // ------------------------------Modal Popup is closed by clicking off the side---------------------------------
-        window.onclick = (event) => { // When the user clicks anywhere outside of the modal, close it
-            if (event.target === customModal[0]) {
-                if (lastModalOpened === 'Category') {
-                    saveCustomCateogry();
-                } else if (lastModalOpened === 'BreakBy') {
-                    saveCustomBreakBy();
-                }
-            }
-        };
-
-
-        // -------------------------------------Save Config Button Clicked----------------------------------------------
-        customSaveButton.click(() => {
-            if (lastModalOpened === 'Category') {
-                saveCustomCateogry();
-            } else if (lastModalOpened === 'BreakBy') {
-                saveCustomBreakBy();
-            }
-        });
-
-
-        // ---------------------------------------Cancel Button Clicked-------------------------------------------------
-        customCancelButton.click(() => {
-            $(customModal).css('display', 'none');
-            $('.trillapser-container').css('display', 'block');
-            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
-            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
-            $scope.widget.redraw();
-        });
-
-
-        // -----------------------------------------Reset Button Clicked------------------------------------------------
-        customResetButton.click(() => {
-            if (lastModalOpened === 'Category') {
-                const categoryNames = getCategoryNames().sort();
-                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-                for (let k = 0; k < categoryNames.length; k++) {
-                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                        .text(categoryNames[k]);
-                    customModalBodyList.append(item);
-                }
-                const cols = document.querySelectorAll('.custom-modal-body-list-item');
-                [].forEach.call(cols, addDnDHandlers);
-                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', getPopupItemList());
-                $scope.widget.redraw();
-            } else if (lastModalOpened === 'BreakBy') {
-                const breakbyNames = getBreakbyNames().sort();
-                customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
-                for (let k = 0; k < breakbyNames.length; k++) {
-                    const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                        .text(breakbyNames[k]);
-                    customModalBodyList.append(item);
-                }
-                const cols = document.querySelectorAll('.custom-modal-body-list-item');
-                [].forEach.call(cols, addDnDHandlers);
-                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', getPopupItemList());
-                $scope.widget.redraw();
-            }
         });
 
 
