@@ -4,6 +4,7 @@ mod.controller('customBarColumnChartController', [
         // Sets default values for Design menu or gets values from widget.custom
         const { widget } = $scope;
         $scope.customMenuEnabled = $$get(widget, 'custom.barcolumnchart.customMenuEnabled') || false;
+        $scope.updateOnEveryChange = true;
         $scope.addTotalOption = $$get(widget, 'custom.barcolumnchart.addTotalOption') || 'No';
         $scope.sortCategoriesOption = $$get(widget, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
         $scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
@@ -37,10 +38,12 @@ mod.controller('customBarColumnChartController', [
         const customResetButton = $('#resetButton');
         const customSaveButton = $('#saveButton');
         const customCancelButton = $('#cancelButton');
+        const toggleUpdateOnEveryChange = $('#toggleUpdateOnEveryChange');
         let dragSrcEl = null;
         let lastModalOpened = null;
         const defaultTotalSortValue = 'zzzzzzTotal';
         let listItems = null;
+        let toggleUpdateCount = 0;
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -88,7 +91,10 @@ mod.controller('customBarColumnChartController', [
             } else {
                 $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
             }
-            $scope.widget.redraw();
+
+            if ($scope.updateOnEveryChange) { // Toggle to update on every change
+                $scope.widget.redraw();
+            }
         };
 
         const handleDragLeave = (elem) => {
@@ -409,5 +415,13 @@ mod.controller('customBarColumnChartController', [
             $scope.sortBreakByOption = sortBreakBy;
             $scope.widget.redraw();
         };
+
+        toggleUpdateOnEveryChange.click(() => {
+            toggleUpdateCount += 1;
+            if (toggleUpdateCount === 2) {
+                toggleUpdateCount = 0;
+                $scope.updateOnEveryChange = !$scope.updateOnEveryChange;
+            }
+        });
     },
 ]);

@@ -1,12 +1,11 @@
 <div class="settings-pane-host-menu"
      data-ng-controller="plugin-customBarColumnChart.controllers.customBarColumnChartController"  >
     <div class="pane-row">
-        <div class="checker-pane-holder" data-ng-class="{disabled: !customMenuEnabled }" >
+        <div class="checker-pane-holder" data-ng-class="{disabled: !customMenuEnabled}" >
             <div class="checker-pane-title">CUSTOMIZE CHART</div>
-
             <data-chk-onoff class="checker-pane-enabled"
                             data-checked="customMenuEnabled"
-                            data-checked-changed="enabledChanged(customMenuEnabled)">
+                            data-checked-changed="enabledChanged()">
             </data-chk-onoff>
         </div>
     </div>
@@ -80,11 +79,24 @@
 					<div class="custom-modal-body"><ul id="custom-modal-body-list"></ul></div>
 				</center>
 				<div class="custom-modal-footer">
-					<button id="resetButton" class="btn">Reset</button>
-					<button id="cancelButton" class="btn">Cancel</button>
-					<button id="saveButton" class="btn">Save</button>
+					<div class="custom-modal-footer-buttons">
+						<button id="resetButton" class="btn">Reset</button>
+						<button id="cancelButton" class="btn">Cancel</button>
+						<button id="saveButton" class="btn">Save</button>
+					</div>
+					<div class="pane-row">
+						<div class="checker-pane-holder">
+							<div class="checker-pane-title">Update on every change</div>
+							<data-chk-onoff id="toggleUpdateOnEveryChange"
+											class="checker-pane-enabled"
+											data-checked="true"
+											data-checked-changed="">
+							</data-chk-onoff>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
+
 </div>

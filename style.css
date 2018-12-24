@@ -97,7 +97,7 @@
 }
 
 .custom-modal-body-center {
-	height: calc(100vh - 88px);
+	height: calc(100vh - 118px);
 }
 
 .custom-modal-body {
@@ -108,10 +108,15 @@
 
 .custom-modal-footer {
     color: #3a4356;
+	height: 75px;
+	padding: 0px 0px 5px 0px;
+}
+
+.custom-modal-footer-buttons {
+    color: #3a4356;
 	height: 45px;
 	padding: 10px 0px 5px 0px;
 }
-
 
 #custom-modal-body-list {
 	list-style-type: none;
