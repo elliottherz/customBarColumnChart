@@ -30,34 +30,9 @@ prism.run([
             const totalLabelPadding = $$get(args.widget, 'custom.barcolumnchart.totalLabelPadding')
                 || defaultLabelPadding;
 
-            const columnTotals = []; // List to store total values
             const { queryResult } = args.widget;
             const { series } = queryResult;
             let maxValue = -999999999999999999999; // Used to update the widget xAxis.max value
-
-            // Loop through the results and calculate the bar totals
-            for (let i = 0; i < queryResult.xAxis.categories.length; i++) {
-                let total = 0;
-                for (let j = 0; j < series.length; j++) {
-                    try { // If the widget already has totals, don't add more totals
-                        if (series[j].sortData !== undefined
-                            && series[j].sortData.includes(defaultTotalSortValue)) { return; }
-                        if (series[j].sortData === undefined
-                            && series[j].name === 'Total') { return; }
-                    } catch (err) {
-                        // Do nothing but catch the exception
-                    }
-
-                    if (series[j].data[i].y !== null) {
-                        total += series[j].data[i].y;
-                    }
-                }
-
-                if (total > maxValue) {
-                    maxValue = total;
-                }
-                columnTotals.push(total);
-            }
 
             const totalCategory = {
                 color: totalPointColor,
@@ -69,11 +44,32 @@ prism.run([
                 type: 'line',
             };
 
-            for (let k = 0; k < queryResult.xAxis.categories.length; k++) {
-                for (let a = 0; a < series.length; a++) {
-                    if (series[a].data[k].selectionData !== undefined) {
-                        const temp = $.extend(true, {}, series[a].data[k]);
-                        temp.y = columnTotals[k];
+            // Loop through the results and calculate the bar totals
+            for (let cIndex = 0; cIndex < queryResult.xAxis.categories.length; cIndex++) {
+                let total = 0;
+                for (let sIndex = 0; sIndex < series.length; sIndex++) {
+                    try { // If the widget already has totals, don't add more totals
+                        if (series[sIndex].sortData !== undefined
+                            && series[sIndex].sortData.includes(defaultTotalSortValue)) { return; }
+                        if (series[sIndex].sortData === undefined
+                            && series[sIndex].name === 'Total') { return; }
+                    } catch (err) {
+                        // Do nothing but catch the exception
+                    }
+
+                    if (series[sIndex].data[cIndex].y !== null) {
+                        total += series[sIndex].data[cIndex].y;
+                    }
+                }
+
+                if (total > maxValue) { // Save the max value of the chart to set the yAxis.max
+                    maxValue = total;
+                }
+
+                for (let sIndex = 0; sIndex < series.length; sIndex++) {
+                    if (series[sIndex].data[cIndex].selectionData !== undefined) {
+                        const temp = $.extend(true, {}, series[sIndex].data[cIndex]);
+                        temp.y = total;
                         temp.marker.enabled = true; // Force markers to be enabled so the total points are always shown
                         totalCategory.data.push(temp);
                         break;
@@ -101,10 +97,10 @@ prism.run([
             plotOptSeries.marker.states.hover.fillColor = 'white';
 
             if (el.subtype === 'column/classic' || el.subtype === 'bar/classic') {
-                for (let i = 0; i < series.length; i++) {
+                series.forEach((sItem) => {
                     try {
-                        if (series[i].sortData.includes(defaultTotalSortValue)) {
-                            series[i].dataLabels = {
+                        if (sItem.sortData.includes(defaultTotalSortValue)) {
+                            sItem.dataLabels = {
                                 enabled: true,
                                 style: {
                                     color: totalPointColor,
@@ -122,14 +118,14 @@ prism.run([
                     } catch (err) {
                         // Do nothing
                     }
-                }
+                });
             } else {
                 queryResult.yAxis[0].stackLabels = {
                     enabled: true,
                     color: totalPointColor,
                     mask: series[0].mask,
-                    formatWithCommas(x) {
-                        return Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    formatWithCommas(val) {
+                        return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                     },
                     formatter() {
                         const func1 = this.options.mask; // Use the mask if defined
@@ -162,12 +158,12 @@ prism.run([
             try { // Check to see if the category is already reversed
                 let val1;
                 let val2;
-                for (let i = 0; i < series.length; i++) {
-                    if (series[i].data[0].selectionData !== undefined) {
-                        ({ 0: val1 } = series[i].data[0].selectionData);
+                for (let index = 0; index < series.length; index++) {
+                    if (series[index].data[0].selectionData !== undefined) {
+                        ({ 0: val1 } = series[index].data[0].selectionData);
                     }
-                    if (series[i].data[1].selectionData !== undefined) {
-                        ({ 0: val2 } = series[i].data[1].selectionData);
+                    if (series[index].data[1].selectionData !== undefined) {
+                        ({ 0: val2 } = series[index].data[1].selectionData);
                     }
                     if (val1 !== undefined && val2 !== undefined) {
                         break;
@@ -179,12 +175,12 @@ prism.run([
             }
 
             // Reverse the Catgory data + xAxis Category
-            for (let i = 0; i < categories.length; i++) {
-                for (let j = 0; j < series.length; j++) {
-                    series[j].data[i] = origSeries[j].data[categories.length - i - 1];
-                }
-                categories[i] = origCategories[categories.length - i - 1];
-            }
+            categories.forEach((category, cIndex) => {
+                series.forEach((sItem, sIndex) => {
+                    sItem.data[cIndex] = origSeries[sIndex].data[categories.length - cIndex - 1];
+                });
+                categories[cIndex] = origCategories[categories.length - cIndex - 1];
+            });
         };
 
 
@@ -197,31 +193,26 @@ prism.run([
             const origCategories = $.extend(true, {}, categories); // Save initial categories
 
             // Loop through the results and calculate the bar totals
-            for (let i = 0; i < categories.length; i++) {
+            categories.forEach((category, cIndex) => {
                 let total = 0;
-                for (let j = 0; j < series.length; j++) {
-                    if (series[j].data[i].y !== null) {
-                        total += series[j].data[i].y;
+                series.forEach((sItem) => {
+                    if (sItem.data[cIndex].y !== null) {
+                        total += sItem.data[cIndex].y;
                     }
-                }
+                });
                 columnTotals.push(total);
-            }
-
-            const mapped = columnTotals.map((val, ind) => ({ index: ind, value: val }));
-            mapped.sort((a, b) => {
-                if (sortType === 'ASC') {
-                    return a.value - b.value;
-                }
-                return b.value - a.value;
             });
 
+            const mapped = columnTotals.map((val, ind) => ({ index: ind, value: val }));
+            mapped.sort((elem1, elem2) => (sortType === 'ASC' ? elem1.value - elem2.value : elem2.value - elem1.value));
+
             // Update the series data/categories to reflect the sorted mapping
-            for (let i = 0; i < categories.length; i++) {
-                for (let j = 0; j < series.length; j++) {
-                    series[j].data[i] = origSeries[j].data[mapped[i].index];
-                }
-                categories[i] = origCategories[mapped[i].index];
-            }
+            categories.forEach((category, cIndex) => {
+                series.forEach((sItem, sIndex) => {
+                    sItem.data[cIndex] = origSeries[sIndex].data[mapped[cIndex].index];
+                });
+                categories[cIndex] = origCategories[mapped[cIndex].index];
+            });
         };
 
         // Sort the Categories based on the custom options selected in the popup
@@ -235,35 +226,36 @@ prism.run([
             if (customList === undefined || customList.length === 0) { return; }
 
             const sortCategoryOrder = [];
-            for (let a = 0; a < categories.length; a++) {
-                for (let b = 0; b < series.length; b++) {
+            categories.forEach((category, cIndex) => {
+                for (let sIndex = 0; sIndex < series.length; sIndex++) {
                     let index;
-                    if (series[b].data[a].selectionData !== undefined
-                        && series[b].data[a].selectionData !== null
-                        && series[b].data[a].selectionData[0] !== undefined) {
-                        if (series[b].data[a].selectionData[0] instanceof Date) {
-                            index = customList.indexOf(series[b].data[a].selectionData[0].toISOString());
+                    if (series[sIndex].data[cIndex].selectionData !== undefined
+                        && series[sIndex].data[cIndex].selectionData !== null
+                        && series[sIndex].data[cIndex].selectionData[0] !== undefined) {
+                        if (series[sIndex].data[cIndex].selectionData[0] instanceof Date) {
+                            index = customList.indexOf(series[sIndex].data[cIndex].selectionData[0].toISOString());
                         } else {
-                            index = customList.indexOf(series[b].data[a].selectionData[0].toString());
+                            index = customList.indexOf(series[sIndex].data[cIndex].selectionData[0].toString());
                         }
                         if (index === -1) { // Add values to the end of the list if they are not in the customList
-                            index = categories.length + a;
+                            index = categories.length + cIndex;
                         }
                         sortCategoryOrder.push(index);
                         break;
                     }
                 }
-            }
+            });
+
             const mapped = sortCategoryOrder.map((val, ind) => ({ index: ind, value: val }));
-            mapped.sort((a, b) => a.value - b.value);
+            mapped.sort((elem1, elem2) => elem1.value - elem2.value);
 
             // Update the series data/categories to reflect the sorted mapping
-            for (let i = 0; i < categories.length; i++) {
-                for (let j = 0; j < series.length; j++) {
-                    series[j].data[i] = origSeries[j].data[mapped[i].index];
-                }
-                categories[i] = origCategories[mapped[i].index];
-            }
+            categories.forEach((category, cIndex) => {
+                series.forEach((sItem, sIndex) => {
+                    sItem.data[cIndex] = origSeries[sIndex].data[mapped[cIndex].index];
+                });
+                categories[cIndex] = origCategories[mapped[cIndex].index];
+            });
         };
 
 
@@ -274,43 +266,44 @@ prism.run([
             const sortDataValues = [];
             const { series } = args.widget.queryResult;
             // Sort the breakby sort values...for some reason they aren't always in order
-            for (let i = 0; i < series.length; i++) {
-                if (series[i].sortData === undefined) {
-                    sortDataValues.push(series[i].name);
-                } else if (series[i].sortData instanceof Date) { // Check if date to convert to ISO
-                    sortDataValues.push(series[i].sortData.toISOString());
-                } else if (series[i].sortData.lastIndexOf(delim) > 0) {
+            series.forEach((sItem) => {
+                let item;
+                if (sItem.sortData === undefined) {
+                    item = sItem.name;
+                } else if (sItem.sortData instanceof Date) { // Check if date to convert to ISO
+                    item = sItem.sortData.toISOString();
+                } else if (sItem.sortData.lastIndexOf(delim) > 0) {
                     // If string was already sorted in reverse, strip last reverse sort values
-                    sortDataValues.push(series[i].sortData
-                        .substring(series[i].sortData.lastIndexOf(delim) + 3));
+                    item = sItem.sortData.substring(sItem.sortData.lastIndexOf(delim) + 3);
                 } else {
-                    sortDataValues.push(series[i].sortData);
+                    item = sItem.sortData;
                 }
-            }
+                sortDataValues.push(item);
+            });
             sortDataValues.sort().reverse();
 
-            for (let k = 0; k < series.length; k++) {
+            series.forEach((sItem) => {
                 let indexStr;
-                if (series[k].sortData === undefined) {
-                    indexStr = sortDataValues.indexOf(series[k].name).toString();
+                if (sItem.sortData === undefined) {
+                    indexStr = sortDataValues.indexOf(sItem.name).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    series[k].sortData = `${indexStr}${delim}${series[k].name}`;
-                } else if (series[k].sortData instanceof Date) {
-                    indexStr = sortDataValues.indexOf(series[k].sortData.toISOString()).toString();
+                    sItem.sortData = `${indexStr}${delim}${sItem.name}`;
+                } else if (sItem.sortData instanceof Date) {
+                    indexStr = sortDataValues.indexOf(sItem.sortData.toISOString()).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    series[k].sortData = `${indexStr}${delim}${series[k].sortData.toISOString()}`;
+                    sItem.sortData = `${indexStr}${delim}${sItem.sortData.toISOString()}`;
                 } else {
-                    indexStr = sortDataValues.indexOf(series[k].sortData).toString();
+                    indexStr = sortDataValues.indexOf(sItem.sortData).toString();
                     if (indexStr.length === 1) {
                         indexStr = `0${indexStr}`;
                     }
-                    series[k].sortData = `${indexStr}${delim}${series[k].sortData}`;
+                    sItem.sortData = `${indexStr}${delim}${sItem.sortData}`;
                 }
-            }
+            });
         };
 
         // Sort the Break By in Asc/Desc based on the total
@@ -321,9 +314,9 @@ prism.run([
 
             const getSum = (total, num) => total + num;
 
-            originalSeries.forEach((i) => {
+            originalSeries.forEach((orig) => {
                 const mySeries = [];
-                i.data.forEach((datapoint) => { mySeries.push(datapoint.y); });
+                orig.data.forEach((datapoint) => { mySeries.push(datapoint.y); });
                 const total = mySeries.reduce(getSum);
                 dict[counter] = total;
                 counter += 1;
@@ -339,10 +332,10 @@ prism.run([
             });
 
             const newSeries = [];
-            for (let i = 0; i < originalSeries.length; i++) {
-                const SeriesIndex = parseInt(OrderArray[i][0], 10);
+            originalSeries.forEach((orig, sIndex) => {
+                const SeriesIndex = parseInt(OrderArray[sIndex][0], 10);
                 newSeries.push(originalSeries[SeriesIndex]);
-            }
+            });
 
             counter = 0;
             newSeries.forEach((item) => {
@@ -361,22 +354,21 @@ prism.run([
             const customList = args.widget.custom.barcolumnchart.tempBreakbyConfiguration
                 || args.widget.custom.barcolumnchart.customBreakbyConfiguration;
             if (customList === undefined || customList.length === 0) { return; }
-            for (let i = 0; i < series.length; i++) {
+            series.forEach((sItem) => {
                 let index;
-
-                if (series[i].sortData instanceof Date) {
-                    index = customList.indexOf(series[i].sortData.toISOString());
-                } else if (series[i].sortData !== undefined) {
+                if (sItem.sortData instanceof Date) {
+                    index = customList.indexOf(sItem.sortData.toISOString());
+                } else if (sItem.sortData !== undefined) {
                     // If series is a Date Field, then store values in ISO
-                    const match1 = series[i].sortData
+                    const match1 = sItem.sortData
                         .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}');
-                    const match2 = series[i].sortData
+                    const match2 = sItem.sortData
                         .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}');
 
                     if (match1 !== null) { // Date is already in ISO format
-                        index = customList.indexOf(series[i].sortData.substring(match1.index));
+                        index = customList.indexOf(sItem.sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = series[i].sortData.substring(match2.index).substring(0, 20);
+                        const matchRes = sItem.sortData.substring(match2.index).substring(0, 20);
                         let strMonthNum;
                         switch (matchRes.substring(0, 3)) {
                             case 'Jan':
@@ -423,20 +415,20 @@ prism.run([
                             + `${matchRes.substring(4, 6)}T${matchRes.substring(12)}`;
                         index = customList.indexOf(isoFormatBreakby);
                     } else { // Non-Date Field
-                        index = customList.indexOf(series[i].name);
+                        index = customList.indexOf(sItem.name);
                     }
                 } else { // Non-Date Field
-                    index = customList.indexOf(series[i].name);
+                    index = customList.indexOf(sItem.name);
                 }
 
                 if (index === -1) {
-                    series[i].sortData = `zzz${series[i].sortData}`;
+                    sItem.sortData = `zzz${sItem.sortData}`;
                 } else if (index < 10) {
-                    series[i].sortData = `0${index}${series[i].sortData}`;
+                    sItem.sortData = `0${index}${sItem.sortData}`;
                 } else {
-                    series[i].sortData = index + series[i].sortData;
+                    sItem.sortData = index + sItem.sortData;
                 }
-            }
+            });
         };
 
 

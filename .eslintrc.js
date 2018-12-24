@@ -13,7 +13,7 @@ module.exports = {
         "require-jsdoc": 0,
         "linebreak-style": 0,
         "consistent-return": 0,
-        //"id-length": ['error', {min: 2}],
+        "id-length": ['error', {'min': 2, 'exceptions': ['x', 'y']}],
         "import/no-unresolved": 0,
         "func-names": ['error', 'as-needed'],
         "arrow-parens": ['error', 'always'],

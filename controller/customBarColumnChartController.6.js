@@ -146,23 +146,25 @@ mod.controller('customBarColumnChartController', [
             const categoryNames = [];
             const { categories } = $scope.widget.queryResult.xAxis;
             const { series } = $scope.widget.queryResult;
-            for (let a = 0; a < categories.length; a++) {
-                for (let b = 0; b < series.length; b++) {
+            categories.forEach((category, categoryIndex) => {
+                for (let seriesIndex = 0; seriesIndex < series.length; seriesIndex++) {
                     try {
-                        if (series[b].data[a].selectionData !== undefined
-                            && series[b].data[a].selectionData[0] !== undefined) {
-                            if (series[b].data[a].selectionData[0] instanceof Date) {
-                                categoryNames.push(series[b].data[a].selectionData[0].toISOString());
+                        if (series[seriesIndex].data[categoryIndex].selectionData !== undefined
+                            && series[seriesIndex].data[categoryIndex].selectionData[0] !== undefined) {
+                            let item;
+                            if (series[seriesIndex].data[categoryIndex].selectionData[0] instanceof Date) {
+                                item = series[seriesIndex].data[categoryIndex].selectionData[0].toISOString();
                             } else {
-                                categoryNames.push(series[b].data[a].selectionData[0].toString());
+                                item = series[seriesIndex].data[categoryIndex].selectionData[0].toString();
                             }
+                            categoryNames.push(item);
                             break;
                         }
                     } catch (err) {
                         // Do Nothing
                     }
                 }
-            }
+            });
             return categoryNames;
         };
 
@@ -171,22 +173,22 @@ mod.controller('customBarColumnChartController', [
         const getBreakbyNames = () => {
             const { series } = $scope.widget.queryResult;
             const seriesNames = []; // Gets current order of the BreakBy
-            for (let i = 0; i < series.length; i++) {
-                if (series[i].sortData instanceof Date) {
-                    seriesNames.push(series[i].sortData.toISOString());
-                } else if (series[i].sortData !== undefined
-                    && !Number.isNaN(series[i].sortData)
-                    && !series[i].sortData.includes(defaultTotalSortValue)) {
+            series.forEach((sItem) => {
+                if (sItem.sortData instanceof Date) {
+                    seriesNames.push(sItem.sortData.toISOString());
+                } else if (sItem.sortData !== undefined
+                    && !Number.isNaN(sItem.sortData)
+                    && !sItem.sortData.includes(defaultTotalSortValue)) {
                     // If series is a Date Field, then store values in ISO
-                    const match1 = series[i].sortData
+                    const match1 = sItem.sortData
                         .match('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'); // 2018-12-19T00:00:00
-                    const match2 = series[i].sortData
+                    const match2 = sItem.sortData
                         .match('[A-Za-z]{3} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}'); // Dec 19 2018 00:00:00
 
                     if (match1 !== null) { // Date is already in ISO format
-                        seriesNames.push(series[i].sortData.substring(match1.index));
+                        seriesNames.push(sItem.sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = series[i].sortData
+                        const matchRes = sItem.sortData
                             .substring(match2.index).substring(0, 20);
                         let strMonthNum;
                         switch (matchRes.substring(0, 3)) {
@@ -233,12 +235,12 @@ mod.controller('customBarColumnChartController', [
                         seriesNames.push(`${matchRes.substring(7, 11)}-${strMonthNum}-${matchRes.substring(4, 6)}`
                             + `T${matchRes.substring(12)}`);
                     } else { // Non-Date Field
-                        seriesNames.push(series[i].name);
+                        seriesNames.push(sItem.name);
                     }
-                } else if (series[i].name !== 'Total') { // No sort data populated
-                    seriesNames.push(series[i].name);
+                } else if (sItem.name !== 'Total') { // No sort data populated
+                    seriesNames.push(sItem.name);
                 }
-            }
+            });
             return seriesNames;
         };
 
