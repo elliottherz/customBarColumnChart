@@ -3,14 +3,13 @@
     "source": [
         "controller/customBarColumnChartController.6.js",
         "directive/directive.6.js",
-        "directive/directiveReporting.6.js",
         "service/service.6.js",
         "main.6.js"
     ],
     "style": [
         "style.css"
     ],
-    "lastUpdate": "2018-12-23T23:53:18.806Z",
+    "lastUpdate": "2018-12-24T00:08:19.205Z",
     "folderName": "customBarColumnChart",
     "isEnabled": true,
     "version": "2.5.2",
