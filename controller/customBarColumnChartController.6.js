@@ -1,52 +1,57 @@
 mod.controller('customBarColumnChartController', [
     '$scope',
     ($scope) => {
-        // Sets default values for Design menu or gets values from widget.custom
-        const { widget } = $scope;
-        $scope.customMenuEnabled = $$get(widget, 'custom.barcolumnchart.customMenuEnabled') || false;
-        $scope.updateOnEveryChange = $$get(widget, 'custom.barcolumnchart.updateOnEveryChange');
-        if ($scope.updateOnEveryChange === undefined) {
-            $scope.updateOnEveryChange = true;
-            $$set(widget, 'custom.barcolumnchart.updateOnEveryChange', $scope.updateOnEveryChange);
-        }
-        $scope.addTotalOption = $$get(widget, 'custom.barcolumnchart.addTotalOption') || 'No';
-        $scope.sortCategoriesOption = $$get(widget, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
-        $scope.sortBreakByOption = $$get(widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
-        $scope.customBreakbyConfiguration = $$get(widget, 'custom.barcolumnchart.customBreakbyConfiguration') || [];
-        $scope.customCategoryConfiguration = $$get(widget, 'custom.barcolumnchart.customCategoryConfiguration') || [];
+        // Sets object references to $scope.widget.custom.barcolumnchart + $scope
+        const $$setObj = (widgetReference, saveObj) => {
+            $$set($scope, widgetReference, saveObj); // Set to custom barcolumnchart obj
+            $$set($scope, widgetReference.split('.').pop(), saveObj); // Set to $scope
+        };
 
-        // Total point customizations
-        $scope.totalPointColor = $$get(widget, 'custom.barcolumnchart.totalPointColor') || 'black';
-        $scope.totalPointFontSize = $$get(widget, 'custom.barcolumnchart.totalPointFontSize') || '11px';
-        $scope.totalPointSize = $$get(widget, 'custom.barcolumnchart.totalPointSize') || '5';
-        $scope.totalPointFontFamily = $$get(widget, 'custom.barcolumnchart.totalPointFontFamily')
-            || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
-        $scope.totalAsLine = $$get(widget, 'custom.barcolumnchart.totalAsLine') || false;
-        $scope.totalYAxisPercentSpacing = $$get(widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 6;
+        // Gets object references from $scope.widget.custom.barcolumnchart, also sets this obj to $scope
+        const $$getObj = (widgetReference) => {
+            const obj = $$get($scope, widgetReference); // Retrieve object from custom barcolumnchart
+            $$set($scope, widgetReference.split('.').pop(), obj); // Set to $scope
+            return obj;
+        };
 
-        let defaultLabelPadding;
-        if (widget.subtype === 'bar/classic' || widget.subtype === 'column/stackedcolumn') {
-            defaultLabelPadding = 6;
-        } else if (widget.subtype === 'column/classic') {
-            defaultLabelPadding = 3;
-        } else {
-            defaultLabelPadding = undefined;
-        }
-        $scope.totalLabelPadding = $$get(widget, 'custom.barcolumnchart.totalLabelPadding') || defaultLabelPadding;
+        // Gets the object from the scope and sets it to the custom object
+        const $$setFromScopeToCustom = (widgetReference) => {
+            $$set($scope, widgetReference, $$get($scope, widgetReference.split('.').pop()));
+        };
 
+        // Custom Bar/Column Chart Widget References (wr)
+        const wrCustomObj = 'widget.custom.barcolumnchart';
+        const wrType = `${wrCustomObj}.type`;
+        const wrIsTypeValid = `${wrCustomObj}.isTypeValid`;
+        const wrCustomMenuEnabled = `${wrCustomObj}.customMenuEnabled`;
+        const wrUpdateOnEveryChange = `${wrCustomObj}.updateOnEveryChange`;
+        const wrAddTotalOption = `${wrCustomObj}.addTotalOption`;
+        const wrSortCategoriesOption = `${wrCustomObj}.sortCategoriesOption`;
+        const wrSortBreakByOption = `${wrCustomObj}.sortBreakByOption`;
+        const wrCustomCategoryConfiguration = `${wrCustomObj}.customCategoryConfiguration`;
+        const wrCustomBreakbyConfiguration = `${wrCustomObj}.customBreakbyConfiguration`;
+        const wrTotalSeriesName = `${wrCustomObj}.totalSeriesName`;
+        const wrTempCustomList = `${wrCustomObj}.tempCustomList`;
+        const wrCurrModalOpened = `${wrCustomObj}.currModalOpened`;
+
+        // Custom Modal Popup DOM Object
         const customModal = $('#custom-modal-overlay');
-        const customModalHeaderTitle = $('#custom-modal-header-title');
-        const customCategoryBtn = $('#customCategoryButton');
-        const customBreakbyBtn = $('#customBreakbyButton');
-        const customModalBodyList = $('#custom-modal-body-list');
-        const customResetButton = $('#resetButton');
-        const customSaveButton = $('#saveButton');
-        const customCancelButton = $('#cancelButton');
-        let dragSrcEl = null;
-        let lastModalOpened = null;
-        const defaultTotalSortValue = 'zzzzzzTotal';
-        let listItems = null;
 
+        // Temporary Objects
+        const defaultTotalSortValue = 'zzzzzzTotal';
+        let dragSrcEl = null;
+        let listItems;
+
+        // Set default values if they don't exist
+        if ($$getObj(wrCustomMenuEnabled) === undefined) { $$setObj(wrCustomMenuEnabled, false); }
+        if ($$getObj(wrUpdateOnEveryChange) === undefined) { $$setObj(wrUpdateOnEveryChange, true); }
+        if ($$getObj(wrAddTotalOption) === undefined) { $$setObj(wrAddTotalOption, 'No'); }
+        if ($$getObj(wrSortCategoriesOption) === undefined) { $$setObj(wrSortCategoriesOption, 'Default'); }
+        if ($$getObj(wrSortBreakByOption) === undefined) { $$setObj(wrSortBreakByOption, 'Default'); }
+        if ($$getObj(wrCurrModalOpened) === undefined) { $$setObj(wrCurrModalOpened, 'None'); }
+        if ($$getObj(wrTotalSeriesName) === undefined) { $$setObj(wrTotalSeriesName, 'Total'); }
+        $$getObj(wrCustomCategoryConfiguration); // Get the obj to set to scope
+        $$getObj(wrCustomBreakbyConfiguration); // Get the obj to set to scope
 
         // -------------------------------------------------------------------------------------------------------------
         // Functions used for drag and dropping elements within the modal popup
@@ -80,33 +85,34 @@ mod.controller('customBarColumnChartController', [
         };
 
         const handleDragEnter = (elem) => {
-            elem.target.classList.add('active');
             const index1 = listItems.indexOf(dragSrcEl.textContent);
             const index2 = listItems.indexOf(elem.target.textContent);
             if (index1 !== index2) {
                 listItems.splice(index1, 1);
                 listItems.splice(index2, 0, dragSrcEl.textContent);
             }
-
-            if (lastModalOpened === 'Category') {
-                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
-            } else {
-                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
+            if (index1 > index2) {
+                elem.target.classList.add('activeAbove');
+            } else if (index1 < index2) {
+                elem.target.classList.add('activeBelow');
             }
+            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
 
-            if ($scope.updateOnEveryChange) { // Toggle to update on every change
+            if ($$getObj(wrUpdateOnEveryChange)) { // Toggle to update on every change
                 $scope.widget.redraw();
             }
         };
 
         const handleDragLeave = (elem) => {
-            elem.target.classList.remove('active');
+            elem.target.classList.remove('activeAbove');
+            elem.target.classList.remove('activeBelow');
         };
 
         const handleDragEnd = () => {
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
             [].forEach.call(cols, (col) => {
-                col.classList.remove('active');
+                col.classList.remove('activeAbove');
+                col.classList.remove('activeBelow');
                 col.style.opacity = '1';
             });
         };
@@ -138,16 +144,13 @@ mod.controller('customBarColumnChartController', [
                     $(elem.target).after(item[0]);
                 }
 
-                if (lastModalOpened === 'Category') {
-                    $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
-                } else {
-                    $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
-                }
+                listItems = [];
+                $('.custom-modal-body-list-item').each((index, elemItem) => listItems.push(elemItem.textContent));
+                $$setObj(wrTempCustomList, $.extend(true, [], listItems));
                 $scope.widget.redraw();
             }
             return false;
         };
-
 
         // ----------------------------------Returns the Categories of the widget---------------------------------------
         const getCategoryNames = () => {
@@ -175,7 +178,6 @@ mod.controller('customBarColumnChartController', [
             });
             return categoryNames;
         };
-
 
         // -----------------------------------Returns the BreakBy of the widget-----------------------------------------
         const getBreakbyNames = () => {
@@ -245,31 +247,27 @@ mod.controller('customBarColumnChartController', [
                     } else { // Non-Date Field
                         seriesNames.push(sItem.name);
                     }
-                } else if (sItem.name !== 'Total') { // No sort data populated
+                } else if (sItem.name !== $$getObj(wrTotalSeriesName)) { // No sort data populated
                     seriesNames.push(sItem.name);
                 }
             });
             return seriesNames;
         };
 
-
         // ------------------------------Saves the Custom Category/Breakby Settings-------------------------------------
         const saveCustomSort = () => {
             $(customModal).css('display', 'none');
             $('.trillapser-container').css('display', 'block');
-            if (lastModalOpened === 'Category') {
-                $scope.customCategoryConfiguration = listItems;
-                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
-            } else if (lastModalOpened === 'BreakBy') {
-                $scope.customBreakbyConfiguration = listItems;
-                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
+            if ($$getObj(wrCurrModalOpened) === 'Category') {
+                $$setObj(wrCustomCategoryConfiguration, $.extend(true, [], listItems));
+            } else if ($$getObj(wrCurrModalOpened) === 'Break By') {
+                $$setObj(wrCustomBreakbyConfiguration, $.extend(true, [], listItems));
             }
-            listItems = null;
+            listItems = undefined;
+            $$setObj(wrTempCustomList, listItems);
+            $$setObj(wrCurrModalOpened, 'None');
             $scope.widget.redraw();
         };
-
 
         // ------------------------------Modal Popup is closed by clicking off the side---------------------------------
         window.onclick = (event) => { // When the user clicks anywhere outside of the modal, close it
@@ -278,31 +276,28 @@ mod.controller('customBarColumnChartController', [
             }
         };
 
-
         // -------------------------------------Save Config Button Clicked----------------------------------------------
-        customSaveButton.click(() => {
+        $('#saveButton').click(() => {
             saveCustomSort();
         });
 
-
         // ---------------------------------------Cancel Button Clicked-------------------------------------------------
-        customCancelButton.click(() => {
+        $('#cancelButton').click(() => {
             $(customModal).css('display', 'none');
             $('.trillapser-container').css('display', 'block');
-            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', undefined);
-            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', undefined);
-            listItems = null;
+            listItems = undefined;
+            $$setObj(wrTempCustomList, listItems);
+            $$setObj(wrCurrModalOpened, 'None');
             $scope.widget.redraw();
         });
 
-
         // ------------------------------------------Reset Modal Popup--------------------------------------------------
         const resetModalPopup = (popupList) => {
-            customModalBodyList.empty(); // Clear out configuration page, and redisplay current configuration
+            $('#custom-modal-body-list').empty(); // Clear out configuration page, and redisplay current configuration
             popupList.forEach((value) => {
                 const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
                     .text(value);
-                customModalBodyList.append(item);
+                $('#custom-modal-body-list').append(item);
             });
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
             [].forEach.call(cols, addDnDHandlers);
@@ -310,118 +305,96 @@ mod.controller('customBarColumnChartController', [
         };
 
         // -----------------------------------------Reset Button Clicked------------------------------------------------
-        customResetButton.click(() => {
-            if (lastModalOpened === 'Category') {
+        $('#resetButton').click(() => {
+            if ($$getObj(wrCurrModalOpened) === 'Category') {
                 resetModalPopup(getCategoryNames().sort());
-                $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
-            } else if (lastModalOpened === 'BreakBy') {
+            } else if ($$getObj(wrCurrModalOpened) === 'Break By') {
                 resetModalPopup(getBreakbyNames().sort());
-                $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
             }
+            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
             $scope.widget.redraw();
         });
 
+        // --------------------------------------------Set Modal Popup--------------------------------------------------
+        const setModalPopup = (customList, widgetReference) => {
+            const customConfig = $$getObj(widgetReference) || [];
+            // If first time clicking the button, then no configuration has been specified.
+            if (customConfig === undefined || customConfig.length === 0) {
+                $$setObj(widgetReference, $.extend(true, [], customList));
+            } else { // If there are new values in the category, then add them to the end of the configuration
+                customList.forEach((item) => {
+                    if (!customConfig.includes(item)) {
+                        customConfig.push(item);
+                    }
+                });
+                $$setObj(widgetReference, $.extend(true, [], customConfig));
+            }
+            resetModalPopup(customConfig);
+        };
+
+        // ------------------------------------------Custom Button Clicked----------------------------------------------
+        const customBtnClicked = (name, widgetReference, customList) => {
+            $$setObj(wrCurrModalOpened, name);
+            $(customModal).css('display', 'block');
+            $('.trillapser-container').css('display', 'none');
+            $('#custom-modal-header-title').text(`Custom ${name}`);
+            setModalPopup(customList, widgetReference);
+            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
+            $scope.widget.redraw();
+        };
 
         // --------------------------------------Custom Category Button Clicked-----------------------------------------
-        customCategoryBtn.click(() => {
-            lastModalOpened = 'Category';
-            $(customModal).css('display', 'block');
-            $('.trillapser-container').css('display', 'none');
-            $(customModalHeaderTitle).text('Custom Category');
-            const categoryNames = getCategoryNames();
-
-            // If first time clicking the button, then no configuration has been specified.
-            // Default to the current order of the breakby.
-            if ($scope.customCategoryConfiguration === undefined || $scope.customCategoryConfiguration.length === 0) {
-                $scope.customCategoryConfiguration = categoryNames;
-                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-            } else { // If there are new values in the category, then add them to the end of the configuration
-                categoryNames.forEach((categoryName) => {
-                    if (!$scope.customCategoryConfiguration.includes(categoryName)) {
-                        $scope.customCategoryConfiguration.push(categoryName);
-                    }
-                });
-                $$set(widget, 'custom.barcolumnchart.customCategoryConfiguration', $scope.customCategoryConfiguration);
-            }
-
-            resetModalPopup($scope.customCategoryConfiguration);
-            $$set(widget, 'custom.barcolumnchart.tempCategoryConfiguration', listItems);
-            $scope.widget.redraw();
+        $('#customCategoryButton').click(() => {
+            customBtnClicked('Category', wrCustomCategoryConfiguration, getCategoryNames());
         });
 
-
-        // -----------------------------------Custom BreakBy Button Clicked---------------------------------------------
-        customBreakbyBtn.click(() => {
-            lastModalOpened = 'BreakBy';
-            $(customModal).css('display', 'block');
-            $('.trillapser-container').css('display', 'none');
-            $(customModalHeaderTitle).text('Custom Break By');
-            const breakbyNames = getBreakbyNames();
-
-            // If first time clicking the button, then no configuration has been specified.
-            // Default to the current order of the breakby.
-            if ($scope.customBreakbyConfiguration === undefined || $scope.customBreakbyConfiguration.length === 0) {
-                $scope.customBreakbyConfiguration = breakbyNames;
-                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-            } else { // If there are new values in the breakby, then add them to the end of the configuration
-                breakbyNames.forEach((breakbyName) => {
-                    if (!$scope.customBreakbyConfiguration.includes(breakbyName)) {
-                        $scope.customBreakbyConfiguration.push(breakbyName);
-                    }
-                });
-                $$set(widget, 'custom.barcolumnchart.customBreakbyConfiguration', $scope.customBreakbyConfiguration);
-            }
-
-            resetModalPopup($scope.customBreakbyConfiguration);
-            $$set(widget, 'custom.barcolumnchart.tempBreakbyConfiguration', listItems);
-            $scope.widget.redraw();
+        // ---------------------------------------Custom BreakBy Button Clicked-----------------------------------------
+        $('#customBreakbyButton').click(() => {
+            customBtnClicked('Break By', wrCustomBreakbyConfiguration, getBreakbyNames());
         });
-
 
         // -----------------------------------Watch when the widget type changes----------------------------------------
         $scope.$watch('widget', () => {
-            $scope.type = $$get($scope, 'widget.type');
-            $$set(widget, 'custom.barcolumnchart.type', $scope.type);
-            $scope.isTypeValid = $scope.type === 'chart/bar' || $scope.type === 'chart/column';
-            $$set(widget, 'custom.barcolumnchart.isTypeValid', $scope.isTypeValid);
+            // Custom Object is re-created and has no custom settings, so take the settings from scope and apply to obj
+            const type = $$get($scope, 'widget.type');
+            $$setObj(wrType, type);
+            $$setObj(wrIsTypeValid, type === 'chart/bar' || type === 'chart/column');
+            $$setFromScopeToCustom(wrCustomMenuEnabled);
+            $$setFromScopeToCustom(wrUpdateOnEveryChange);
+            $$setFromScopeToCustom(wrAddTotalOption);
+            $$setFromScopeToCustom(wrSortCategoriesOption);
+            $$setFromScopeToCustom(wrSortBreakByOption);
+            $$setFromScopeToCustom(wrCustomCategoryConfiguration);
+            $$setFromScopeToCustom(wrCustomBreakbyConfiguration);
         });
-
 
         // ---------------------------------Triggers on customMenuEnabled changed---------------------------------------
         $scope.enabledChanged = () => {
-            $scope.customMenuEnabled = !$scope.customMenuEnabled;
-            $$set(widget, 'custom.barcolumnchart.customMenuEnabled', $scope.customMenuEnabled);
+            $$setObj(wrCustomMenuEnabled, !($$getObj(wrCustomMenuEnabled) || false));
             $scope.widget.redraw();
         };
-
 
         // -----------------------------Triggers on showTotals radio selection changed----------------------------------
         $scope.changeAddTotal = (addTotal) => {
-            $$set(widget, 'custom.barcolumnchart.addTotalOption', addTotal);
-            $scope.addTotalOption = addTotal;
+            $$setObj(wrAddTotalOption, addTotal);
             $scope.widget.redraw();
         };
-
 
         // ----------------------------Triggers on sortCategories radio selection changed-------------------------------
         $scope.changeSortCategories = (sortCategories) => {
-            $$set(widget, 'custom.barcolumnchart.sortCategoriesOption', sortCategories);
-            $scope.sortCategoriesOption = sortCategories;
+            $$setObj(wrSortCategoriesOption, sortCategories);
             $scope.widget.redraw();
         };
 
-
         // -------------------------------Triggers on sortBreakBy radio selection changed-------------------------------
         $scope.changeSortBreakBy = (sortBreakBy) => {
-            $$set(widget, 'custom.barcolumnchart.sortBreakByOption', sortBreakBy);
-            $scope.sortBreakByOption = sortBreakBy;
+            $$setObj(wrSortBreakByOption, sortBreakBy);
             $scope.widget.redraw();
         };
 
         // ---------------------------------Triggers on updateOnEveryChange changed-------------------------------------
-        widget.custom.barcolumnchart.toggleUpdateOnEveryChange = () => {
-            $scope.updateOnEveryChange = !$scope.updateOnEveryChange;
-            $$set(widget, 'custom.barcolumnchart.updateOnEveryChange', $scope.updateOnEveryChange);
+        $scope.toggleUpdateOnEveryChange = () => {
+            $$setObj(wrUpdateOnEveryChange, !$$getObj(wrUpdateOnEveryChange));
         };
     },
 ]);

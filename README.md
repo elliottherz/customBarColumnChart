@@ -1,16 +1,20 @@
-########################################################################################################################
+###################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Dec-24-2018 by Elliott Herz
-#	Current Version: V2.5.3
-########################################################################################################################
+#	Last Modified on Dec-25-2018 by Elliott Herz
+#	Current Version: V2.6.0
+###################################################################################################
 
 
 IF YOU FIND ANY ISSUES, PLEASE EMAIL: Elliott.Herz@sisense.com
 
 
 # Description: 
-When you add a breakby to a bar or column chart, you lose the ability to see the total value for the bar/column, you lose the ability to sort the category based on the total amount in each bar/column, and you never had the ability to sort the breakby. This plugin allows you to do all 3 in an easy to use way. In addition, you can also sort a column/bar chart in any custom predefined configuration.
+When you add a breakby to a bar or column chart, you lose the ability to see the total value for
+the bar/column, you lose the ability to sort the category based on the total amount in each 
+bar/column, and you never had the ability to sort the breakby. This plugin allows you to do all 3
+in an easy to use way. In addition, you can also sort a column/bar chart in any custom predefined 
+configuration.
 
 
 # Example Usage:
@@ -23,9 +27,11 @@ When you add a breakby to a bar or column chart, you lose the ability to see the
 
 # Limitations
 1) Doesn't support more than 1 field in the Categories Section.
-2) Doesn't work with a combination of different charts series (such as a column + line in the same chart).
+2) Doesn't work with a combination of different charts series 
+    (such as a column + line in the same chart).
 
 
 # Currently Known Minor Issues
 1) Can't scroll most of the time in the modal popup.
-2) During the export, the total points are connected with a line (this is due to the phantom process being run in IE10).    
+2) During the export, the total points are connected with a line 
+    (this is due to the phantom process being run in IE10).    

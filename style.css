@@ -143,12 +143,17 @@
 	border-bottom: 1px solid black;
 }
 
-.custom-modal-body-list-item.active {
-    background-color: #4CAF50;
-    color: white;
+.custom-modal-body-list-item.activeAbove {
+	/* border-top: 36px solid #4CAF50; */
+	background-color: #4CAF50;
 }
 
-.custom-modal-body-list-item:hover:not(.active) {
+.custom-modal-body-list-item.activeBelow {
+	/* border-bottom: 36px solid #4CAF50; */
+	background-color: #4CAF50;
+}
+
+.custom-modal-body-list-item:hover{
     background-color: #555;
     color: white;
 }

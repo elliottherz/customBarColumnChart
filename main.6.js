@@ -11,6 +11,7 @@ prism.run([
             if (el.subtype === 'column/stackedcolumn100' || el.subtype === 'bar/stacked100') { return; }
 
             // Configurations
+            const totalSeriesName = $$get(args.widget, 'custom.barcolumnchart.totalSeriesName') || 'Total';
             const totalPointColor = $$get(args.widget, 'custom.barcolumnchart.totalPointColor') || 'black';
             const totalPointFontSize = $$get(args.widget, 'custom.barcolumnchart.totalPointFontSize') || '11px';
             const totalPointSize = $$get(args.widget, 'custom.barcolumnchart.totalPointSize') || '5';
@@ -38,7 +39,7 @@ prism.run([
                 color: totalPointColor,
                 data: [],
                 mask: series[0].mask,
-                name: 'Total',
+                name: totalSeriesName,
                 sortData: defaultTotalSortValue,
                 yAxis: 0,
                 type: 'line',
@@ -52,7 +53,7 @@ prism.run([
                         if (series[sIndex].sortData !== undefined
                             && series[sIndex].sortData.includes(defaultTotalSortValue)) { return; }
                         if (series[sIndex].sortData === undefined
-                            && series[sIndex].name === 'Total') { return; }
+                            && series[sIndex].name === totalSeriesName) { return; }
                     } catch (err) {
                         // Do nothing but catch the exception
                     }
@@ -221,8 +222,16 @@ prism.run([
             const origSeries = $.extend(true, {}, series); // Save initial series data results
             const { categories } = args.widget.queryResult.xAxis;
             const origCategories = $.extend(true, {}, categories); // Save initial categories
-            const customList = args.widget.custom.barcolumnchart.tempCategoryConfiguration
-                || args.widget.custom.barcolumnchart.customCategoryConfiguration;
+            const customCategoryConfiguration = $$get(args.widget, 'custom.barcolumnchart.customCategoryConfiguration');
+            const tempCustomList = $$get(args.widget, 'custom.barcolumnchart.tempCustomList');
+            const currModalOpened = $$get(args.widget, 'custom.barcolumnchart.currModalOpened');
+            let customList;
+            if (currModalOpened === 'Category' && tempCustomList !== undefined) {
+                customList = tempCustomList;
+            } else {
+                customList = customCategoryConfiguration;
+            }
+
             if (customList === undefined || customList.length === 0) { return; }
 
             const sortCategoryOrder = [];
@@ -351,8 +360,15 @@ prism.run([
         // Sort the Break By based on the custom options selected in the popup
         const executeSortBreakByCustomOption = (el, args) => {
             const { series } = args.widget.queryResult;
-            const customList = args.widget.custom.barcolumnchart.tempBreakbyConfiguration
-                || args.widget.custom.barcolumnchart.customBreakbyConfiguration;
+            const customBreakbyConfiguration = $$get(args.widget, 'custom.barcolumnchart.customBreakbyConfiguration');
+            const tempCustomList = $$get(args.widget, 'custom.barcolumnchart.tempCustomList');
+            const currModalOpened = $$get(args.widget, 'custom.barcolumnchart.currModalOpened');
+            let customList;
+            if (currModalOpened === 'Break By' && tempCustomList !== undefined) {
+                customList = tempCustomList;
+            } else {
+                customList = customBreakbyConfiguration;
+            }
             if (customList === undefined || customList.length === 0) { return; }
             series.forEach((sItem) => {
                 let index;
@@ -440,21 +456,20 @@ prism.run([
             }
             prevConfiguration = args.widget.custom; // Temporarily save the current configuration
             prevWidgetId = args.widget.oid; // Savae the current widgetID
-
             const isTypeValid = $$get(args.widget, 'custom.barcolumnchart.isTypeValid');
-            const customMenuEnabled = $$get(args.widget, 'custom.barcolumnchart.customMenuEnabled');
-            const addTotalOption = $$get(args.widget, 'custom.barcolumnchart.addTotalOption');
-            const sortCategoriesOption = $$get(args.widget, 'custom.barcolumnchart.sortCategoriesOption');
-            const sortBreakByOption = $$get(args.widget, 'custom.barcolumnchart.sortBreakByOption');
-            const tempCategoryConfiguration = $$get(args.widget, 'custom.barcolumnchart.tempCategoryConfiguration');
-            const tempBreakbyConfiguration = $$get(args.widget, 'custom.barcolumnchart.tempBreakbyConfiguration');
+            const customMenuEnabled = $$get(args.widget, 'custom.barcolumnchart.customMenuEnabled') || false;
+            const addTotalOption = $$get(args.widget, 'custom.barcolumnchart.addTotalOption') || 'No';
+            const sortCategoriesOption = $$get(args.widget, 'custom.barcolumnchart.sortCategoriesOption') || 'Default';
+            const sortBreakByOption = $$get(args.widget, 'custom.barcolumnchart.sortBreakByOption') || 'Default';
+            const tempCustomList = $$get(args.widget, 'custom.barcolumnchart.tempCustomList');
+            const currModalOpened = $$get(args.widget, 'custom.barcolumnchart.currModalOpened');
 
             // If the chart isn't valid or the option isn't enabled return
             if (!customMenuEnabled || !isTypeValid) { return; }
 
             try {
                 // Sorting Category Options
-                if (tempCategoryConfiguration !== undefined) { // Check if temp configuration is being used
+                if (tempCustomList !== undefined && currModalOpened === 'Category') { // Check if custom sort is open
                     executeSortCategoryCustomOption(el, args);
                 } else if (sortCategoriesOption === 'Reverse') {
                     executeSortCategoryReverseOption(el, args);
@@ -471,7 +486,7 @@ prism.run([
 
             try {
                 // Sorting Break By Options
-                if (tempBreakbyConfiguration !== undefined) { // Check if temp configuration is being used
+                if (tempCustomList !== undefined && currModalOpened === 'Break By') { // Check if custom sort is open
                     executeSortBreakByCustomOption(el, args);
                 } else if (sortBreakByOption === 'Asc by Total') {
                     executeSortBreakByTotalOption(el, args, 'ASC');
