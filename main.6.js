@@ -386,46 +386,24 @@ prism.run([
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
                         const matchRes = sItem.sortData.substring(match2.index).substring(0, 20);
                         let strMonthNum;
-                        switch (matchRes.substring(0, 3)) {
-                            case 'Jan':
-                                strMonthNum = '01';
-                                break;
-                            case 'Feb':
-                                strMonthNum = '02';
-                                break;
-                            case 'Mar':
-                                strMonthNum = '03';
-                                break;
-                            case 'Apr':
-                                strMonthNum = '04';
-                                break;
-                            case 'May':
-                                strMonthNum = '05';
-                                break;
-                            case 'Jun':
-                                strMonthNum = '06';
-                                break;
-                            case 'Jul':
-                                strMonthNum = '07';
-                                break;
-                            case 'Aug':
-                                strMonthNum = '08';
-                                break;
-                            case 'Sep':
-                                strMonthNum = '09';
-                                break;
-                            case 'Oct':
-                                strMonthNum = '10';
-                                break;
-                            case 'Nov':
-                                strMonthNum = '11';
-                                break;
-                            case 'Dec':
-                                strMonthNum = '12';
-                                break;
-                            default:
-                                strMonthNum = '00';
-                                break;
+                        const monthDict = {
+                            Jan: '01',
+                            Feb: '02',
+                            Mar: '03',
+                            Apr: '04',
+                            May: '05',
+                            Jun: '06',
+                            Jul: '07',
+                            Aug: '08',
+                            Sep: '09',
+                            Oct: '10',
+                            Nov: '11',
+                            Dec: '12',
+                        };
+                        if (monthDict[matchRes.substring(0, 3)] !== undefined) {
+                            strMonthNum = monthDict[matchRes.substring(0, 3)];
+                        } else {
+                            strMonthNum = '00';
                         }
                         const isoFormatBreakby = `${matchRes.substring(7, 11)}-${strMonthNum}-`
                             + `${matchRes.substring(4, 6)}T${matchRes.substring(12)}`;

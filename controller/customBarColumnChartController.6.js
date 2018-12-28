@@ -40,6 +40,8 @@ mod.controller('customBarColumnChartController', [
         // Temporary Objects
         const defaultTotalSortValue = 'zzzzzzTotal';
         let dragSrcEl = null;
+        let origDragSrcElIndex = -1;
+        let origListItems;
         let listItems;
 
         // Set default values if they don't exist
@@ -72,6 +74,8 @@ mod.controller('customBarColumnChartController', [
         const handleDragStart = (elem) => {
             elem.target.style.opacity = '0.4';
             dragSrcEl = elem.target;
+            origDragSrcElIndex = listItems.indexOf(dragSrcEl.textContent);
+            origListItems = $.extend(true, [], listItems);
             elem.dataTransfer.effectAllowed = 'move';
             elem.dataTransfer.setData('text/html', elem.target.innerHTML);
         };
@@ -87,14 +91,24 @@ mod.controller('customBarColumnChartController', [
         const handleDragEnter = (elem) => {
             const index1 = listItems.indexOf(dragSrcEl.textContent);
             const index2 = listItems.indexOf(elem.target.textContent);
-            if (index1 !== index2) {
+            if (index1 > index2 && origDragSrcElIndex > index2) {
                 listItems.splice(index1, 1);
                 listItems.splice(index2, 0, dragSrcEl.textContent);
-            }
-            if (index1 > index2) {
                 elem.target.classList.add('activeAbove');
-            } else if (index1 < index2) {
+            } else if (index1 < index2 && origDragSrcElIndex >= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2 - 1, 0, dragSrcEl.textContent);
+                elem.target.classList.add('activeAbove');
+            } else if (index1 > index2 && origDragSrcElIndex <= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2 + 1, 0, dragSrcEl.textContent);
                 elem.target.classList.add('activeBelow');
+            } else if (index1 < index2 && origDragSrcElIndex <= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2, 0, dragSrcEl.textContent);
+                elem.target.classList.add('activeBelow');
+            } else {
+                listItems = $.extend(true, [], origListItems);
             }
             $$setObj(wrTempCustomList, $.extend(true, [], listItems));
 
@@ -143,12 +157,13 @@ mod.controller('customBarColumnChartController', [
                 } else {
                     $(elem.target).after(item[0]);
                 }
-
                 listItems = [];
                 $('.custom-modal-body-list-item').each((index, elemItem) => listItems.push(elemItem.textContent));
-                $$setObj(wrTempCustomList, $.extend(true, [], listItems));
-                $scope.widget.redraw();
+            } else {
+                listItems = $.extend(true, [], origListItems);
             }
+            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
+            $scope.widget.redraw();
             return false;
         };
 
@@ -198,49 +213,26 @@ mod.controller('customBarColumnChartController', [
                     if (match1 !== null) { // Date is already in ISO format
                         seriesNames.push(sItem.sortData.substring(match1.index));
                     } else if (match2 !== null) { // Date needs to be converted to ISO Format
-                        const matchRes = sItem.sortData
-                            .substring(match2.index).substring(0, 20);
+                        const matchRes = sItem.sortData.substring(match2.index).substring(0, 20);
                         let strMonthNum;
-                        switch (matchRes.substring(0, 3)) {
-                            case 'Jan':
-                                strMonthNum = '01';
-                                break;
-                            case 'Feb':
-                                strMonthNum = '02';
-                                break;
-                            case 'Mar':
-                                strMonthNum = '03';
-                                break;
-                            case 'Apr':
-                                strMonthNum = '04';
-                                break;
-                            case 'May':
-                                strMonthNum = '05';
-                                break;
-                            case 'Jun':
-                                strMonthNum = '06';
-                                break;
-                            case 'Jul':
-                                strMonthNum = '07';
-                                break;
-                            case 'Aug':
-                                strMonthNum = '08';
-                                break;
-                            case 'Sep':
-                                strMonthNum = '09';
-                                break;
-                            case 'Oct':
-                                strMonthNum = '10';
-                                break;
-                            case 'Nov':
-                                strMonthNum = '11';
-                                break;
-                            case 'Dec':
-                                strMonthNum = '12';
-                                break;
-                            default:
-                                strMonthNum = '00';
-                                break;
+                        const monthDict = {
+                            Jan: '01',
+                            Feb: '02',
+                            Mar: '03',
+                            Apr: '04',
+                            May: '05',
+                            Jun: '06',
+                            Jul: '07',
+                            Aug: '08',
+                            Sep: '09',
+                            Oct: '10',
+                            Nov: '11',
+                            Dec: '12',
+                        };
+                        if (monthDict[matchRes.substring(0, 3)] !== undefined) {
+                            strMonthNum = monthDict[matchRes.substring(0, 3)];
+                        } else {
+                            strMonthNum = '00';
                         }
                         seriesNames.push(`${matchRes.substring(7, 11)}-${strMonthNum}-${matchRes.substring(4, 6)}`
                             + `T${matchRes.substring(12)}`);
@@ -295,8 +287,7 @@ mod.controller('customBarColumnChartController', [
         const resetModalPopup = (popupList) => {
             $('#custom-modal-body-list').empty(); // Clear out configuration page, and redisplay current configuration
             popupList.forEach((value) => {
-                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                    .text(value);
+                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(value);
                 $('#custom-modal-body-list').append(item);
             });
             const cols = document.querySelectorAll('.custom-modal-body-list-item');
