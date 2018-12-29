@@ -144,14 +144,19 @@
 }
 
 .custom-modal-body-list-item.activeAbove {
-	border-top: 12px solid  #4CAF50;
+	border-top: 18px solid  #4CAF50;
 }
 
 .custom-modal-body-list-item.activeBelow {
-	border-bottom: 12px solid #4CAF50;
+	border-bottom: 18px solid #4CAF50;
 }
 
-.custom-modal-body-list-item:hover {
+.custom-modal-body-list-item-hover:hover {
+    background-color: #555;
+    color: white;
+}
+
+.custom-modal-body-list-item-dragged {
     background-color: #555;
     color: white;
 }

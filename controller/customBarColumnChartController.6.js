@@ -40,9 +40,11 @@ mod.controller('customBarColumnChartController', [
         // Temporary Objects
         const defaultTotalSortValue = 'zzzzzzTotal';
         let dragSrcEl = null;
+        let dragSrcElText = '';
         let origDragSrcElIndex = -1;
         let origListItems;
         let listItems;
+        let itemDropped = false;
 
         // Set default values if they don't exist
         if ($$getObj(wrCustomMenuEnabled) === undefined) { $$setObj(wrCustomMenuEnabled, false); }
@@ -57,27 +59,48 @@ mod.controller('customBarColumnChartController', [
 
         // -------------------------------------------------------------------------------------------------------------
         // Functions used for drag and dropping elements within the modal popup
-        const findLargerModalItemIndex = (elem1, elem2) => {
-            let index1 = -1;
-            let index2 = 0;
-            elem1.parentNode.childNodes.forEach((elem, index) => {
-                if (elem1.textContent === elem.textContent) {
-                    index1 = index;
-                }
-                if (elem2.textContent === elem.textContent) {
-                    index2 = index;
-                }
-            });
-            return index1 > index2;
-        };
-
         const handleDragStart = (elem) => {
             elem.target.style.opacity = '0.4';
             dragSrcEl = elem.target;
-            origDragSrcElIndex = listItems.indexOf(dragSrcEl.textContent);
+            dragSrcElText = dragSrcEl.textContent;
+            dragSrcEl.classList.add('custom-modal-body-list-item-dragged');
+            origDragSrcElIndex = listItems.indexOf(dragSrcElText);
             origListItems = $.extend(true, [], listItems);
+            itemDropped = false;
             elem.dataTransfer.effectAllowed = 'move';
             elem.dataTransfer.setData('text/html', elem.target.innerHTML);
+            $('#custom-modal-body-list').children().each((index, item) => {
+                item.classList.remove('custom-modal-body-list-item-hover');
+            });
+        };
+
+        const handleDragEnter = (elem) => {
+            const index1 = listItems.indexOf(dragSrcElText);
+            const index2 = listItems.indexOf(elem.target.textContent);
+            if (index1 > index2 && origDragSrcElIndex > index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2, 0, dragSrcElText);
+                elem.target.classList.add('activeAbove');
+            } else if (index1 < index2 && origDragSrcElIndex >= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2 - 1, 0, dragSrcElText);
+                elem.target.classList.add('activeAbove');
+            } else if (index1 > index2 && origDragSrcElIndex <= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2 + 1, 0, dragSrcElText);
+                elem.target.classList.add('activeBelow');
+            } else if (index1 < index2 && origDragSrcElIndex <= index2) {
+                listItems.splice(index1, 1);
+                listItems.splice(index2, 0, dragSrcElText);
+                elem.target.classList.add('activeBelow');
+            } else {
+                listItems = $.extend(true, [], origListItems);
+            }
+
+            if ($$getObj(wrUpdateOnEveryChange)) { // Toggle to update on every change
+                $$setObj(wrTempCustomList, $.extend(true, [], listItems));
+                $scope.widget.redraw();
+            }
         };
 
         const handleDragOver = (elem) => {
@@ -85,36 +108,6 @@ mod.controller('customBarColumnChartController', [
                 elem.preventDefault(); // Necessary. Allows us to drop.
             }
             elem.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
-            return false;
-        };
-
-        const handleDragEnter = (elem) => {
-            const index1 = listItems.indexOf(dragSrcEl.textContent);
-            const index2 = listItems.indexOf(elem.target.textContent);
-            if (index1 > index2 && origDragSrcElIndex > index2) {
-                listItems.splice(index1, 1);
-                listItems.splice(index2, 0, dragSrcEl.textContent);
-                elem.target.classList.add('activeAbove');
-            } else if (index1 < index2 && origDragSrcElIndex >= index2) {
-                listItems.splice(index1, 1);
-                listItems.splice(index2 - 1, 0, dragSrcEl.textContent);
-                elem.target.classList.add('activeAbove');
-            } else if (index1 > index2 && origDragSrcElIndex <= index2) {
-                listItems.splice(index1, 1);
-                listItems.splice(index2 + 1, 0, dragSrcEl.textContent);
-                elem.target.classList.add('activeBelow');
-            } else if (index1 < index2 && origDragSrcElIndex <= index2) {
-                listItems.splice(index1, 1);
-                listItems.splice(index2, 0, dragSrcEl.textContent);
-                elem.target.classList.add('activeBelow');
-            } else {
-                listItems = $.extend(true, [], origListItems);
-            }
-            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
-
-            if ($$getObj(wrUpdateOnEveryChange)) { // Toggle to update on every change
-                $scope.widget.redraw();
-            }
         };
 
         const handleDragLeave = (elem) => {
@@ -122,13 +115,34 @@ mod.controller('customBarColumnChartController', [
             elem.target.classList.remove('activeBelow');
         };
 
+        const handleDrop = (elem) => {
+            if (elem.stopPropagation) {
+                elem.stopPropagation(); // Stops some browsers from redirecting.
+            }
+            if (dragSrcEl !== elem.target) { // If item is dropped in different spot, then consider the item dropped
+                itemDropped = true;
+            }
+        };
+
         const handleDragEnd = () => {
-            const cols = document.querySelectorAll('.custom-modal-body-list-item');
-            [].forEach.call(cols, (col) => {
-                col.classList.remove('activeAbove');
-                col.classList.remove('activeBelow');
-                col.style.opacity = '1';
-            });
+            /* eslint-disable no-use-before-define */ // resetModalPopup + addDnDHandlers
+            if (!itemDropped) { // Due to no handleDrop event, set the list back to the original list
+                listItems = $.extend(true, [], origListItems);
+            }
+            resetModalPopup($.extend(true, [], listItems));
+            const droppedItem = $('#custom-modal-body-list').children().filter(`:contains("${dragSrcElText}")`);
+            $(droppedItem).animate({ 'background-color': '#4CAF50' }, 250); // Drop animations
+            $(droppedItem).animate({ 'background-color': '#555' }, 250);
+            $(droppedItem).animate({ 'background-color': '#4CAF50' }, 250);
+            $(droppedItem).animate({ 'background-color': '#555' }, 250);
+            $(droppedItem).animate({ color: '#4CAF50' }, 250);
+            const newItem = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(dragSrcElText);
+            newItem[0].classList.add('custom-modal-body-list-item-hover');
+            $(newItem).css('color', '#4CAF50').css('font-weight', 'bold');
+            addDnDHandlers(newItem[0]);
+            setTimeout(() => { $(droppedItem).replaceWith(newItem); }, 1250);
+            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
+            $scope.widget.redraw();
         };
 
         const addDnDHandlers = (elem) => {
@@ -136,35 +150,8 @@ mod.controller('customBarColumnChartController', [
             elem.addEventListener('dragenter', handleDragEnter, false);
             elem.addEventListener('dragover', handleDragOver, false);
             elem.addEventListener('dragleave', handleDragLeave, false);
-            // eslint-disable-next-line no-use-before-define
             elem.addEventListener('drop', handleDrop, false);
             elem.addEventListener('dragend', handleDragEnd, false);
-        };
-
-        const handleDrop = (elem) => {
-            if (elem.stopPropagation) {
-                elem.stopPropagation(); // Stops some browsers from redirecting.
-            }
-            if (dragSrcEl !== elem.target) { // Don't do anything if dropping the same column we're dragging.
-                // Need to figure out if element is above or below other element.
-                const placeItemBefore = findLargerModalItemIndex(dragSrcEl, elem.target);
-                elem.target.parentNode.removeChild(dragSrcEl);
-                const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>")
-                    .text(dragSrcEl.textContent);
-                addDnDHandlers(item[0]);
-                if (placeItemBefore) {
-                    $(elem.target).before(item[0]);
-                } else {
-                    $(elem.target).after(item[0]);
-                }
-                listItems = [];
-                $('.custom-modal-body-list-item').each((index, elemItem) => listItems.push(elemItem.textContent));
-            } else {
-                listItems = $.extend(true, [], origListItems);
-            }
-            $$setObj(wrTempCustomList, $.extend(true, [], listItems));
-            $scope.widget.redraw();
-            return false;
         };
 
         // ----------------------------------Returns the Categories of the widget---------------------------------------
@@ -288,10 +275,10 @@ mod.controller('customBarColumnChartController', [
             $('#custom-modal-body-list').empty(); // Clear out configuration page, and redisplay current configuration
             popupList.forEach((value) => {
                 const item = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(value);
+                item[0].classList.add('custom-modal-body-list-item-hover');
+                addDnDHandlers(item[0]);
                 $('#custom-modal-body-list').append(item);
             });
-            const cols = document.querySelectorAll('.custom-modal-body-list-item');
-            [].forEach.call(cols, addDnDHandlers);
             listItems = popupList;
         };
 

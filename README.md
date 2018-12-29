@@ -1,8 +1,8 @@
 ###################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Dec-27-2018 by Elliott Herz
-#	Current Version: V2.6.1
+#	Last Modified on Dec-29-2018 by Elliott Herz
+#	Current Version: V2.7.0
 ###################################################################################################
 
 
@@ -33,6 +33,5 @@ configuration.
 
 # Currently Known Minor Issues
 1) Can't scroll most of the time in the modal popup.
-2) Hover effect on the modal popup when dragging list item upward can be off.
-3) During the export, the total points are connected with a line 
+2) During the export, the total points are connected with a line 
     (this is due to the phantom process being run in IE10).   
