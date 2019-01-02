@@ -86,8 +86,8 @@ prism.run([
             const { series: plotOptSeries } = queryResult.plotOptions;
 
             if (!totalAsLine) {
-                plotOptSeries.lineWidth = 0.00001;
-                plotOptSeries.states.hover.lineWidth = 0.00001;
+                plotOptSeries.lineWidth = 0;
+                plotOptSeries.states.hover.lineWidth = 0;
                 plotOptSeries.states.hover.lineWidthPlus = 0;
             }
             plotOptSeries.marker.radius = totalPointSize;

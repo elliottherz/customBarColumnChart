@@ -1,8 +1,8 @@
 ###################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Dec-29-2018 by Elliott Herz
-#	Current Version: V2.7.0
+#	Last Modified on Jan-01-2018 by Elliott Herz
+#	Current Version: V2.7.1
 ###################################################################################################
 
 
@@ -29,9 +29,3 @@ configuration.
 1) Doesn't support more than 1 field in the Categories Section.
 2) Doesn't work with a combination of different charts series 
     (such as a column + line in the same chart).
-
-
-# Currently Known Minor Issues
-1) Can't scroll most of the time in the modal popup.
-2) During the export, the total points are connected with a line 
-    (this is due to the phantom process being run in IE10).   
