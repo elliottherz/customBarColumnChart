@@ -223,7 +223,7 @@ mod.controller('customBarColumnChartController', [
                         }
                         seriesNames.push(`${matchRes.substring(7, 11)}-${strMonthNum}-${matchRes.substring(4, 6)}`
                             + `T${matchRes.substring(12)}`);
-                    } else { // Non-Date Field
+                    } else if (sItem.name !== $$getObj(wrTotalSeriesName)) { // Non-Date Field
                         seriesNames.push(sItem.name);
                     }
                 } else if (sItem.name !== $$getObj(wrTotalSeriesName)) { // No sort data populated
@@ -295,18 +295,18 @@ mod.controller('customBarColumnChartController', [
 
         // --------------------------------------------Set Modal Popup--------------------------------------------------
         const setModalPopup = (customList, widgetReference) => {
-            const customConfig = $$getObj(widgetReference) || [];
+            let customConfig = $$getObj(widgetReference) || [];
             // If first time clicking the button, then no configuration has been specified.
             if (customConfig === undefined || customConfig.length === 0) {
-                $$setObj(widgetReference, $.extend(true, [], customList));
+                customConfig = customList;
             } else { // If there are new values in the category, then add them to the end of the configuration
                 customList.forEach((item) => {
                     if (!customConfig.includes(item)) {
                         customConfig.push(item);
                     }
                 });
-                $$setObj(widgetReference, $.extend(true, [], customConfig));
             }
+            $$setObj(widgetReference, $.extend(true, [], customConfig));
             resetModalPopup(customConfig);
         };
 

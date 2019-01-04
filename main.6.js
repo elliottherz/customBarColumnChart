@@ -5,6 +5,16 @@ prism.run([
         let prevConfiguration = null;
         let prevWidgetId = null;
 
+        const resetRenderSeriesFunction = () => {
+            // eslint-disable-next-line func-names
+            Highcharts.Chart.prototype.renderSeries = function () {
+                this.series.forEach((seriesItem) => {
+                    seriesItem.translate();
+                    seriesItem.render();
+                });
+            };
+        };
+
         // ---------------------------------------------Totals Option---------------------------------------------------
         // Execute the Show Totals customization when the selection is 'Yes'
         const executeAddTotalOption = (el, args) => {
@@ -175,7 +185,7 @@ prism.run([
                 // Pass
             }
 
-            // Reverse the Catgory data + xAxis Category
+            // Reverse the Category data + xAxis Category
             categories.forEach((category, cIndex) => {
                 series.forEach((sItem, sIndex) => {
                     sItem.data[cIndex] = origSeries[sIndex].data[categories.length - cIndex - 1];
@@ -315,6 +325,68 @@ prism.run([
             });
         };
 
+        const executeSortBreakByPerCategoryOption = (el, args, sortType) => {
+            const sortValue = sortType === 'ASC' ? -1 : 1;
+
+            // eslint-disable-next-line func-names
+            Highcharts.Chart.prototype.renderSeries = function () {
+                const shapeValues = {};
+                const data = {};
+
+                this.series.forEach((seriesItem) => {
+                    seriesItem.translate();
+                    seriesItem.points.forEach((point) => {
+                        const catKey = point.category;
+                        if (data[catKey] === undefined) {
+                            data[catKey] = [];
+                        }
+                        if (shapeValues[catKey] === undefined) {
+                            shapeValues[catKey] = [];
+                        }
+                        if (point.shapeArgs !== undefined) {
+                            shapeValues[catKey].push(point.shapeArgs.x);
+                        }
+                        data[catKey].push(point);
+                    });
+                });
+
+                $.each(data, (catKey, points) => {
+                    let currentSize = this.plotSizeY;
+                    points.sort((elem1, elem2) => {
+                        try {
+                            if (elem1.shapeArgs.height < elem2.shapeArgs.height) {
+                                return sortValue;
+                            } if (elem1.shapeArgs.height > elem2.shapeArgs.height) {
+                                return -sortValue;
+                            }
+                            return 0;
+                        } catch (err) {
+                            return -sortValue;
+                        }
+                    });
+                    let count = 0; // Keep track of how many successful times a point.shapeArgs.x has been given
+                    points.forEach((point) => {
+                        try {
+                            const catValues = shapeValues[catKey];
+                            if (catValues.length > 1 && catValues[0] !== catValues[1]) { // Classic Chart
+                                point.shapeArgs.x = catValues[count];
+                                count += 1;
+                            } else { // Stacked Chart
+                                point.shapeArgs.y = currentSize - point.shapeArgs.height;
+                                currentSize = point.shapeArgs.y + 0;
+                            }
+                        } catch (err) {
+                            // Do Nothing, the point is undefined for this series
+                        }
+                    });
+                });
+
+                this.series.forEach((seriesItem) => {
+                    seriesItem.render();
+                });
+            };
+        };
+
         // Sort the Break By in Asc/Desc based on the total
         const executeSortBreakByTotalOption = (el, args, sortType) => {
             const originalSeries = args.widget.queryResult.series;
@@ -445,6 +517,8 @@ prism.run([
             // If the chart isn't valid or the option isn't enabled return
             if (!customMenuEnabled || !isTypeValid) { return; }
 
+            resetRenderSeriesFunction(); // Modified Highchart render setting for breakby sort, need to reset this.
+
             try {
                 // Sorting Category Options
                 if (tempCustomList !== undefined && currModalOpened === 'Category') { // Check if custom sort is open
@@ -466,12 +540,16 @@ prism.run([
                 // Sorting Break By Options
                 if (tempCustomList !== undefined && currModalOpened === 'Break By') { // Check if custom sort is open
                     executeSortBreakByCustomOption(el, args);
+                } else if (sortBreakByOption === 'Reverse') {
+                    executeSortBreakByReverseOption(el, args);
+                } else if (sortBreakByOption === 'Asc per Category') {
+                    executeSortBreakByPerCategoryOption(el, args, 'ASC');
+                } else if (sortBreakByOption === 'Desc per Category') {
+                    executeSortBreakByPerCategoryOption(el, args, 'DESC');
                 } else if (sortBreakByOption === 'Asc by Total') {
                     executeSortBreakByTotalOption(el, args, 'ASC');
                 } else if (sortBreakByOption === 'Desc by Total') {
                     executeSortBreakByTotalOption(el, args, 'DESC');
-                } else if (sortBreakByOption === 'Reverse') {
-                    executeSortBreakByReverseOption(el, args);
                 } else if (sortBreakByOption === 'Custom') {
                     executeSortBreakByCustomOption(el, args);
                 }

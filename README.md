@@ -1,8 +1,8 @@
 ###################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Jan-01-2018 by Elliott Herz
-#	Current Version: V2.7.1
+#	Last Modified on Jan-04-2018 by Elliott Herz
+#	Current Version: V2.8.0
 ###################################################################################################
 
 
