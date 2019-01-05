@@ -501,6 +501,8 @@ prism.run([
         // ------------------------------------On Widget Render Event---------------------------------------------------
         // Envoke users selected customiations during widget render event
         const onWidgetRender = (el, args) => {
+            resetRenderSeriesFunction(); // Modified Highchart render setting for breakby sort, need to reset this.
+
             if (args.widget.custom === undefined && prevWidgetId === args.widget.oid) { // Need to check if same widget
                 args.widget.custom = prevConfiguration; // Set the config if one used to exist, or default to null
             }
@@ -516,8 +518,6 @@ prism.run([
 
             // If the chart isn't valid or the option isn't enabled return
             if (!customMenuEnabled || !isTypeValid) { return; }
-
-            resetRenderSeriesFunction(); // Modified Highchart render setting for breakby sort, need to reset this.
 
             try {
                 // Sorting Category Options

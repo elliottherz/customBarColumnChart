@@ -301,7 +301,7 @@ mod.controller('customBarColumnChartController', [
                 customConfig = customList;
             } else { // If there are new values in the category, then add them to the end of the configuration
                 customList.forEach((item) => {
-                    if (!customConfig.includes(item)) {
+                    if (!customConfig.includes(item) && item !== $$getObj(wrTotalSeriesName)) {
                         customConfig.push(item);
                     }
                 });
