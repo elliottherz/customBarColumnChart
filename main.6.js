@@ -331,17 +331,31 @@ prism.run([
             // eslint-disable-next-line func-names
             Highcharts.Chart.prototype.renderSeries = function () {
                 const shapeValues = {};
+                const yValues = {};
                 const data = {};
+                const nullValue = -999999999999999999999;
 
                 this.series.forEach((seriesItem) => {
                     seriesItem.translate();
                     seriesItem.points.forEach((point) => {
                         const catKey = point.category;
+                        let seriesHeight;
+                        try {
+                            seriesHeight = point.shapeArgs.y + point.shapeArgs.height;
+                        } catch (err) {
+                            // Do nothing
+                        }
                         if (data[catKey] === undefined) {
                             data[catKey] = [];
                         }
                         if (shapeValues[catKey] === undefined) {
                             shapeValues[catKey] = [];
+                        }
+                        if (yValues[catKey] === undefined) {
+                            yValues[catKey] = seriesHeight;
+                        }
+                        if (seriesHeight > yValues[catKey] && point.y !== null) {
+                            yValues[catKey] = seriesHeight;
                         }
                         if (point.shapeArgs !== undefined) {
                             shapeValues[catKey].push(point.shapeArgs.x);
@@ -351,18 +365,21 @@ prism.run([
                 });
 
                 $.each(data, (catKey, points) => {
-                    let currentSize = this.plotSizeY;
+                    let currentSize;
+                    if (el.subtype === 'column/stackedcolumn100' || el.subtype === 'bar/stacked100') {
+                        currentSize = this.plotSizeY;
+                    } else {
+                        currentSize = yValues[catKey];
+                    }
                     points.sort((elem1, elem2) => {
-                        try {
-                            if (elem1.shapeArgs.height < elem2.shapeArgs.height) {
-                                return sortValue;
-                            } if (elem1.shapeArgs.height > elem2.shapeArgs.height) {
-                                return -sortValue;
-                            }
-                            return 0;
-                        } catch (err) {
+                        const temp1 = elem1.y || nullValue;
+                        const temp2 = elem2.y || nullValue;
+                        if (temp1 < temp2) {
+                            return sortValue;
+                        } if (temp1 > temp2) {
                             return -sortValue;
                         }
+                        return 0;
                     });
                     let count = 0; // Keep track of how many successful times a point.shapeArgs.x has been given
                     points.forEach((point) => {
