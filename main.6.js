@@ -5,6 +5,17 @@ prism.run([
         let prevConfiguration = null;
         let prevWidgetId = null;
 
+
+        const compare = (item1, item2) => {
+            if (item1.sortData < item2.sortData) {
+                return -1;
+            }
+            if (item1.sortData > item2.sortData) {
+                return 1;
+            }
+            return 0;
+        };
+
         const resetRenderSeriesFunction = () => {
             // eslint-disable-next-line func-names
             Highcharts.Chart.prototype.renderSeries = function () {
@@ -41,7 +52,7 @@ prism.run([
             const totalLabelPadding = $$get(args.widget, 'custom.barcolumnchart.totalLabelPadding')
                 || defaultLabelPadding;
 
-            const { queryResult } = args.widget;
+            const queryResult = args.options;
             const { series } = queryResult;
             let maxValue = -999999999999999999999; // Used to update the widget xAxis.max value
 
@@ -161,9 +172,9 @@ prism.run([
         // --------------------------------------------Category Sorts---------------------------------------------------
         // Sort Categories in Reverse Order
         const executeSortCategoryReverseOption = (el, args) => {
-            const { series } = args.widget.queryResult;
+            const { series } = args.options;
             const origSeries = $.extend(true, {}, series); // Save initial series data results
-            const { categories } = args.widget.queryResult.xAxis;
+            const { categories } = args.options.xAxis;
             const origCategories = $.extend(true, {}, categories); // Save initial categories
 
             try { // Check to see if the category is already reversed
@@ -198,9 +209,9 @@ prism.run([
         // Sort Categories by Asc/Desc based on the totals
         const executeSortCategoriesTotalOption = (el, args, sortType) => {
             const columnTotals = []; // List to store total values
-            const { series } = args.widget.queryResult;
+            const { series } = args.options;
             const origSeries = $.extend(true, {}, series); // Save initial series data results
-            const { categories } = args.widget.queryResult.xAxis;
+            const { categories } = args.options.xAxis;
             const origCategories = $.extend(true, {}, categories); // Save initial categories
 
             // Loop through the results and calculate the bar totals
@@ -228,9 +239,9 @@ prism.run([
 
         // Sort the Categories based on the custom options selected in the popup
         const executeSortCategoryCustomOption = (el, args) => {
-            const { series } = args.widget.queryResult;
+            const { series } = args.options;
             const origSeries = $.extend(true, {}, series); // Save initial series data results
-            const { categories } = args.widget.queryResult.xAxis;
+            const { categories } = args.options.xAxis;
             const origCategories = $.extend(true, {}, categories); // Save initial categories
             const customCategoryConfiguration = $$get(args.widget, 'custom.barcolumnchart.customCategoryConfiguration');
             const tempCustomList = $$get(args.widget, 'custom.barcolumnchart.tempCustomList');
@@ -283,7 +294,7 @@ prism.run([
         const executeSortBreakByReverseOption = (el, args) => {
             const delim = '|~|'; // Delimiter
             const sortDataValues = [];
-            const { series } = args.widget.queryResult;
+            const { series } = args.options;
             // Sort the breakby sort values...for some reason they aren't always in order
             series.forEach((sItem) => {
                 let item;
@@ -323,6 +334,7 @@ prism.run([
                     sItem.sortData = `${indexStr}${delim}${sItem.sortData}`;
                 }
             });
+            series.sort(compare);
         };
 
         const executeSortBreakByPerCategoryOption = (el, args, sortType) => {
@@ -406,7 +418,7 @@ prism.run([
 
         // Sort the Break By in Asc/Desc based on the total
         const executeSortBreakByTotalOption = (el, args, sortType) => {
-            const originalSeries = args.widget.queryResult.series;
+            const originalSeries = args.options.series;
             const dict = {};
             let counter = 0;
 
@@ -443,12 +455,13 @@ prism.run([
                 item.sortData = counter.toString() + item.sortData;
                 counter += 1;
             });
-            args.widget.queryResult.series = newSeries;
+            args.options.series = newSeries;
+            args.options.series.sort(compare);
         };
 
         // Sort the Break By based on the custom options selected in the popup
         const executeSortBreakByCustomOption = (el, args) => {
-            const { series } = args.widget.queryResult;
+            const { series } = args.options;
             const customBreakbyConfiguration = $$get(args.widget, 'custom.barcolumnchart.customBreakbyConfiguration');
             const tempCustomList = $$get(args.widget, 'custom.barcolumnchart.tempCustomList');
             const currModalOpened = $$get(args.widget, 'custom.barcolumnchart.currModalOpened');
@@ -508,16 +521,19 @@ prism.run([
                     sItem.sortData = `zzz${sItem.sortData}`;
                 } else if (index < 10) {
                     sItem.sortData = `0${index}${sItem.sortData}`;
+                    // Code: sItem.legendIndex = index+1;
                 } else {
                     sItem.sortData = index + sItem.sortData;
+                    // Code: sItem.legendIndex = index+1;
                 }
             });
+            series.sort(compare);
         };
 
 
         // ------------------------------------On Widget Render Event---------------------------------------------------
         // Envoke users selected customiations during widget render event
-        const onWidgetRender = (el, args) => {
+        const onWidgetBeforeViewLoaded = (el, args) => {
             resetRenderSeriesFunction(); // Modified Highchart render setting for breakby sort, need to reset this.
 
             if (args.widget.custom === undefined && prevWidgetId === args.widget.oid) { // Need to check if same widget
@@ -580,14 +596,14 @@ prism.run([
             }
         };
 
-        const registerToRenderEvent = (el, args) => {
-            args.widget.on('render', onWidgetRender);
+        const registerToBeforeViewLoaded = (el, args) => {
+            args.widget.on('beforeviewloaded', onWidgetBeforeViewLoaded);
         };
 
         // Main functions for the plugin, envoked during the widget added + init events
         prism.on('dashboardloaded', (el, args) => {
-            args.dashboard.on('widgetadded', registerToRenderEvent);
-            args.dashboard.on('widgetinitialized', registerToRenderEvent);
+            args.dashboard.on('widgetadded', registerToBeforeViewLoaded);
+            args.dashboard.on('widgetinitialized', registerToBeforeViewLoaded);
         });
     },
 ]);

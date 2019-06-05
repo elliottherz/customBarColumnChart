@@ -131,16 +131,17 @@ mod.controller('customBarColumnChartController', [
             }
             resetModalPopup($.extend(true, [], listItems));
             const droppedItem = $('#custom-modal-body-list').children().filter(`:contains("${dragSrcElText}")`);
-            $(droppedItem).animate({ 'background-color': '#4CAF50' }, 250); // Drop animations
-            $(droppedItem).animate({ 'background-color': '#555' }, 250);
-            $(droppedItem).animate({ 'background-color': '#4CAF50' }, 250);
-            $(droppedItem).animate({ 'background-color': '#555' }, 250);
-            $(droppedItem).animate({ color: '#4CAF50' }, 250);
+            const $el = $(droppedItem);
+            $el.animate({ 'background-color': '#4CAF50' }, 250); // Drop animations
+            $el.animate({ 'background-color': '#555' }, 250);
+            $el.animate({ 'background-color': '#4CAF50' }, 250);
+            $el.animate({ 'background-color': '#555' }, 250);
+            $el.animate({ color: '#4CAF50' }, 250);
             const newItem = $("<li class='custom-modal-body-list-item' draggable='true'></li>").text(dragSrcElText);
             newItem[0].classList.add('custom-modal-body-list-item-hover');
             $(newItem).css('color', '#4CAF50').css('font-weight', 'bold');
             addDnDHandlers(newItem[0]);
-            setTimeout(() => { $(droppedItem).replaceWith(newItem); }, 1250);
+            setTimeout(() => { $el.replaceWith(newItem); }, 1250);
             $$setObj(wrTempCustomList, $.extend(true, [], listItems));
             $scope.widget.redraw();
         };
