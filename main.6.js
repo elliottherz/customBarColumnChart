@@ -5,7 +5,6 @@ prism.run([
         let prevConfiguration = null;
         let prevWidgetId = null;
 
-
         const compare = (item1, item2) => {
             if (item1.sortData < item2.sortData) {
                 return -1;
@@ -64,6 +63,7 @@ prism.run([
                 sortData: defaultTotalSortValue,
                 yAxis: 0,
                 type: 'line',
+                legendIndex: 9999999,
             };
 
             // Loop through the results and calculate the bar totals
@@ -335,6 +335,9 @@ prism.run([
                 }
             });
             series.sort(compare);
+            series.forEach((sItem, index) => {
+                sItem.legendIndex = index + 1;
+            });
         };
 
         const executeSortBreakByPerCategoryOption = (el, args, sortType) => {
@@ -457,6 +460,9 @@ prism.run([
             });
             args.options.series = newSeries;
             args.options.series.sort(compare);
+            args.options.series.forEach((sItem, index) => {
+                sItem.legendIndex = index + 1;
+            });
         };
 
         // Sort the Break By based on the custom options selected in the popup
@@ -521,13 +527,14 @@ prism.run([
                     sItem.sortData = `zzz${sItem.sortData}`;
                 } else if (index < 10) {
                     sItem.sortData = `0${index}${sItem.sortData}`;
-                    // Code: sItem.legendIndex = index+1;
                 } else {
                     sItem.sortData = index + sItem.sortData;
-                    // Code: sItem.legendIndex = index+1;
                 }
             });
             series.sort(compare);
+            series.forEach((sItem, index) => {
+                sItem.legendIndex = index + 1;
+            });
         };
 
 

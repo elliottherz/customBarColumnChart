@@ -1,8 +1,8 @@
 ###################################################################################################
 #  	Plugin for showing total points + sorting of categories/breakbys in column/bar charts
 #	Created on Nov-27-2018 by Elliott Herz
-#	Last Modified on Jun-04-2019 by Elliott Herz
-#	Current Version: V2.8.3
+#	Last Modified on Jun-06-2019 by Elliott Herz
+#	Current Version: V2.8.4
 #   Tested Sisense Version: V7.4.2.10063
 ###################################################################################################
 
@@ -30,5 +30,4 @@ configuration.
 1) Doesn't support more than 1 field in the Categories Section.
 2) Doesn't work with a combination of different charts series 
     (such as a column + line in the same chart).
-3) Doesn't PDF
-4) Breakby Sort By Category doesn't work when you update filters.
+3) Breakby Sort By Category doesn't work when you update filters.
