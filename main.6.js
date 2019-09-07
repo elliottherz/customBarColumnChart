@@ -38,11 +38,13 @@ prism.run([
             const totalPointFontFamily = $$get(args.widget, 'custom.barcolumnchart.totalPointFontFamily')
                 || '"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif';
             const totalAsLine = $$get(args.widget, 'custom.barcolumnchart.totalAsLine') || false;
-            const totalYAxisPercentSpacing = $$get(args.widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 6;
+            const totalYAxisPercentSpacing = $$get(args.widget, 'custom.barcolumnchart.totalYAxisPercentSpacing') || 7;
 
             let defaultLabelPadding;
-            if (el.subtype === 'bar/classic' || el.subtype === 'column/stackedcolumn') {
+            if (el.subtype === 'bar/classic') {
                 defaultLabelPadding = 6;
+            } else if (el.subtype === 'column/stackedcolumn') {
+                defaultLabelPadding = 10;
             } else if (el.subtype === 'column/classic') {
                 defaultLabelPadding = 3;
             } else {
@@ -53,7 +55,10 @@ prism.run([
 
             const queryResult = args.options;
             const { series } = queryResult;
-            let maxValue = -999999999999999999999; // Used to update the widget xAxis.max value
+            let maxValue = -999999999999999999999; // Used to update the widget yAxis.max value
+            let minValue = 999999999999999999999; // Used to update the widget yAxis.min value
+
+            if (series.length === 0) { return; } // If there isn't any data, don't try to add a total
 
             const totalCategory = {
                 color: totalPointColor,
@@ -88,6 +93,10 @@ prism.run([
                     maxValue = total;
                 }
 
+                if (total < minValue) { // Save the max value of the chart to set the yAxis.min
+                    minValue = total;
+                }
+
                 for (let sIndex = 0; sIndex < series.length; sIndex++) {
                     if (series[sIndex].data[cIndex].selectionData !== undefined) {
                         const temp = $.extend(true, {}, series[sIndex].data[cIndex]);
@@ -100,8 +109,18 @@ prism.run([
             }
 
             series.push(totalCategory);
-            // Update the max value of the yAxis so the value label displays for the max total
-            queryResult.yAxis[0].max = maxValue * (1 + totalYAxisPercentSpacing * 0.01);
+
+            if (maxValue < 0) { // Update the max value of the yAxis so the value label displays for the max total
+                queryResult.yAxis[0].max = 0;
+            } else {
+                queryResult.yAxis[0].max = maxValue * (1 + totalYAxisPercentSpacing * 0.01);
+            }
+
+            if (minValue > 0) { // Update the min value of the yAxis so the value label displays for the max total
+                queryResult.yAxis[0].min = 0;
+            } else {
+                queryResult.yAxis[0].min = minValue * (1 + totalYAxisPercentSpacing * 0.01);
+            }
             // Ensure that the chart doesn't waste extra white space due to highchart auto sizing.
             queryResult.yAxis[0].endOnTick = false;
             const { series: plotOptSeries } = queryResult.plotOptions;
@@ -118,8 +137,8 @@ prism.run([
             plotOptSeries.marker.lineColor = totalPointColor;
             plotOptSeries.marker.states.hover.fillColor = 'white';
 
-            if (el.subtype === 'column/classic' || el.subtype === 'bar/classic') {
-                series.forEach((sItem) => {
+            series.forEach((sItem) => {
+                if (el.subtype === 'column/classic' || el.subtype === 'bar/classic') {
                     try {
                         if (sItem.sortData.includes(defaultTotalSortValue)) {
                             sItem.dataLabels = {
@@ -133,39 +152,35 @@ prism.run([
                                     textOutline: '1px contrast',
                                 },
                                 padding: totalLabelPadding,
-                                y: el.subtype === 'bar/classic' ? 3 : 0,
+                                y: 0,
                                 x: 0,
                             };
                         }
                     } catch (err) {
                         // Do nothing
                     }
-                });
-            } else {
-                queryResult.yAxis[0].stackLabels = {
-                    enabled: true,
-                    color: totalPointColor,
-                    mask: series[0].mask,
-                    formatWithCommas(val) {
-                        return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                    },
-                    formatter() {
-                        const func1 = this.options.mask; // Use the mask if defined
-                        const func2 = this.options.formatWithCommas; // Default format
-                        return defined(func1) ? func1(this.total) : func2(this.total);
-                    },
-                    style: {
-                        color: totalPointColor,
-                        fontSize: totalPointFontSize,
-                        fontWeight: 'bold',
-                        fontFamily: totalPointFontFamily,
-                        lineHeight: 'normal',
-                        textOutline: '1px contrast',
-                    },
-                    y: el.subtype === 'column/stackedcolumn' ? -totalLabelPadding : 5,
-                    x: el.subtype === 'column/stackedcolumn' ? 0 : totalLabelPadding,
-                };
-            }
+                } else {
+                    try {
+                        if (sItem.sortData.includes(defaultTotalSortValue)) {
+                            sItem.dataLabels = {
+                                enabled: true,
+                                style: {
+                                    color: totalPointColor,
+                                    fontSize: totalPointFontSize,
+                                    fontWeight: 'bold',
+                                    fontFamily: totalPointFontFamily,
+                                    lineHeight: 'normal',
+                                    textOutline: '1px contrast',
+                                },
+                                y: el.subtype === 'column/stackedcolumn' ? -totalLabelPadding : 0,
+                                x: el.subtype === 'column/stackedcolumn' ? 0 : totalLabelPadding,
+                            };
+                        }
+                    } catch (err) {
+                        // Do nothing
+                    }
+                }
+            });
         };
 
 
