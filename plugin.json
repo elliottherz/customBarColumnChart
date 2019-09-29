@@ -9,9 +9,9 @@
     "style": [
         "style.css"
     ],
-    "lastUpdate": "2019-09-06T15:18:03.603Z",
+    "lastUpdate": "2019-09-29T21:34:44.230Z",
     "folderName": "customBarColumnChart",
     "isEnabled": true,
-    "version": "2.8.5",
+    "version": "2.9.0",
     "pluginInfraVersion": 2
 }

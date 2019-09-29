@@ -68,12 +68,33 @@ prism.run([
                 sortData: defaultTotalSortValue,
                 yAxis: 0,
                 type: 'line',
+                states: $.extend(true, {}, queryResult.plotOptions.series.states),
+                marker: $.extend(true, {}, queryResult.plotOptions.series.marker),
                 legendIndex: 9999999,
             };
 
+            if (!totalAsLine) {
+                totalCategory.lineWidth = 0;
+                totalCategory.states.hover.lineWidth = 0;
+                totalCategory.states.hover.lineWidthPlus = 0;
+                totalCategory.marker.states.hover.lineWidth = 0;
+                totalCategory.marker.states.select.lineWidth = 0;
+            }
+            totalCategory.marker.radius = totalPointSize;
+            totalCategory.marker.fillColor = totalPointColor;
+            totalCategory.marker.lineColor = totalPointColor;
+            totalCategory.marker.states.hover.radius = totalPointSize;
+            totalCategory.marker.states.hover.fillColor = 'white';
+            totalCategory.marker.states.select.radius = totalPointSize;
+
+            const sumFunction = (arr) => arr.reduce((val1, val2) => val1 + val2, 0);
+
             // Loop through the results and calculate the bar totals
+            const otherArr = [];
             for (let cIndex = 0; cIndex < queryResult.xAxis.categories.length; cIndex++) {
                 let total = 0;
+                const negArr = [];
+                const posArr = [];
                 for (let sIndex = 0; sIndex < series.length; sIndex++) {
                     try { // If the widget already has totals, don't add more totals
                         if (series[sIndex].sortData !== undefined
@@ -84,17 +105,34 @@ prism.run([
                         // Do nothing but catch the exception
                     }
 
-                    if (series[sIndex].data[cIndex].y !== null) {
-                        total += series[sIndex].data[cIndex].y;
+                    if (series[sIndex].data[cIndex].y !== null && series[sIndex].yAxis === 0
+                    && (el.type.includes(series[sIndex].type) || series[sIndex].type === undefined)) {
+                        const val = series[sIndex].data[cIndex].y;
+                        if (val >= 0) {
+                            posArr.push(val);
+                        } else {
+                            negArr.push(val);
+                        }
+                    } else if (series[sIndex].data[cIndex].y !== null && series[sIndex].yAxis === 0) {
+                        const val = series[sIndex].data[cIndex].y;
+                        otherArr.push(val);
                     }
                 }
 
-                if (total > maxValue) { // Save the max value of the chart to set the yAxis.max
-                    maxValue = total;
+                total = sumFunction(posArr) + sumFunction(negArr);
+
+                // Save the max value of the chart to set the yAxis.max
+                if (el.subtype.includes('stack') && maxValue < sumFunction(posArr)) {
+                    maxValue = sumFunction(posArr);
+                } else if (maxValue < total || maxValue < Math.max.apply(null, Object.values(posArr))) {
+                    maxValue = Math.max(total, Math.max.apply(null, Object.values(posArr)));
                 }
 
-                if (total < minValue) { // Save the max value of the chart to set the yAxis.min
-                    minValue = total;
+                // Save the min value of the chart to set the yAxis.min
+                if (el.subtype.includes('stack') && minValue > sumFunction(negArr)) {
+                    minValue = sumFunction(negArr);
+                } else if (minValue > total || minValue > Math.min.apply(null, Object.values(negArr))) {
+                    minValue = Math.min(total, Math.min.apply(null, Object.values(negArr)));
                 }
 
                 for (let sIndex = 0; sIndex < series.length; sIndex++) {
@@ -107,15 +145,20 @@ prism.run([
                     }
                 }
             }
-
             series.push(totalCategory);
 
+            if (maxValue < Math.max.apply(null, Object.values(otherArr))) {
+                maxValue = Math.max.apply(null, Object.values(otherArr));
+            }
             if (maxValue < 0) { // Update the max value of the yAxis so the value label displays for the max total
                 queryResult.yAxis[0].max = 0;
             } else {
                 queryResult.yAxis[0].max = maxValue * (1 + totalYAxisPercentSpacing * 0.01);
             }
 
+            if (minValue > Math.min.apply(null, Object.values(otherArr))) {
+                minValue = Math.min.apply(null, Object.values(otherArr));
+            }
             if (minValue > 0) { // Update the min value of the yAxis so the value label displays for the max total
                 queryResult.yAxis[0].min = 0;
             } else {
@@ -123,19 +166,7 @@ prism.run([
             }
             // Ensure that the chart doesn't waste extra white space due to highchart auto sizing.
             queryResult.yAxis[0].endOnTick = false;
-            const { series: plotOptSeries } = queryResult.plotOptions;
-
-            if (!totalAsLine) {
-                plotOptSeries.lineWidth = 0;
-                plotOptSeries.states.hover.lineWidth = 0;
-                plotOptSeries.states.hover.lineWidthPlus = 0;
-            }
-            plotOptSeries.marker.radius = totalPointSize;
-            plotOptSeries.marker.states.hover.radius = totalPointSize;
-            plotOptSeries.marker.states.select.radius = totalPointSize;
-            plotOptSeries.marker.fillColor = totalPointColor;
-            plotOptSeries.marker.lineColor = totalPointColor;
-            plotOptSeries.marker.states.hover.fillColor = 'white';
+            queryResult.yAxis[0].startOnTick = false;
 
             series.forEach((sItem) => {
                 if (el.subtype === 'column/classic' || el.subtype === 'bar/classic') {
@@ -233,7 +264,8 @@ prism.run([
             categories.forEach((category, cIndex) => {
                 let total = 0;
                 series.forEach((sItem) => {
-                    if (sItem.data[cIndex].y !== null) {
+                    if (sItem.data[cIndex].y !== null && sItem.yAxis === 0
+                    && (el.type.includes(sItem.type) || sItem.type === undefined)) {
                         total += sItem.data[cIndex].y;
                     }
                 });
