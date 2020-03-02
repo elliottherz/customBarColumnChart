@@ -7,7 +7,7 @@
 ###################################################################################################
 
 
-IF YOU FIND ANY ISSUES, PLEASE EMAIL: Elliott.Herz@sisense.com
+IF YOU FIND ANY ISSUES, PLEASE EMAIL: elliottherz@gmail.com
 
 
 # Description: 
